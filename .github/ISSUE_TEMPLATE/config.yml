@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: FireflyIII Documentation
+    url: https://docs.firefly-iii.org/
+    about: Official FireflyIII documentation
+  - name: Discussions
+    url: https://github.com/firefly-iii/firefly-iii/discussions
+    about: Ask questions in the FireflyIII community discussions

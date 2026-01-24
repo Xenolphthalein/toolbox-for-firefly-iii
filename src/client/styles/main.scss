@@ -1,0 +1,320 @@
+@use 'vuetify/settings' with (
+  $utilities: true,
+  $color-pack: true
+);
+
+// Custom styles
+:root {
+  --app-header-height: 64px;
+  --app-nav-width: 256px;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.v-application {
+  height: 100%;
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.5);
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(128, 128, 128, 0.7);
+  }
+}
+
+// Transaction list styles
+.transaction-item {
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(var(--v-theme-primary), 0.05);
+  }
+}
+
+.match-score {
+  &.high {
+    color: rgb(var(--v-theme-success));
+  }
+  &.medium {
+    color: rgb(var(--v-theme-warning));
+  }
+  &.low {
+    color: rgb(var(--v-theme-error));
+  }
+}
+
+// Chip styles
+.confidence-chip {
+  font-weight: 500;
+}
+
+// Date picker adjustments
+.v-date-picker {
+  width: 100%;
+}
+
+// Card transitions
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// List transitions
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+// Helper classes
+.clickable {
+  cursor: pointer;
+}
+
+.no-select {
+  user-select: none;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Money display
+.amount {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+
+  &.positive {
+    color: rgb(var(--v-theme-success));
+  }
+
+  &.negative {
+    color: rgb(var(--v-theme-error));
+  }
+}
+
+// Light theme specific improvements (matches any theme ending with -light)
+[class*='v-theme--'][class*='-light'] {
+  // Improve text contrast for medium emphasis text
+  .text-medium-emphasis {
+    opacity: 0.8 !important;
+  }
+
+  // Card styling for better visual hierarchy
+  .v-card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.05),
+      0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  // Navigation drawer styling
+  .v-navigation-drawer {
+    border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+    background-color: rgb(var(--v-theme-surface)) !important;
+
+    .v-list {
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    .v-list-item--active {
+      background-color: rgba(var(--v-theme-primary), 0.12);
+    }
+
+    .v-list-item:hover:not(.v-list-item--active) {
+      background-color: rgba(var(--v-theme-on-surface), 0.04);
+    }
+
+    .v-list-item-subtitle {
+      opacity: 0.7;
+    }
+  }
+
+  // App bar styling
+  .v-app-bar {
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+
+  // Table improvements
+  .v-table {
+    background-color: transparent !important;
+
+    thead th {
+      background-color: rgb(var(--v-theme-surface-variant)) !important;
+      color: rgb(var(--v-theme-on-surface)) !important;
+      font-weight: 600 !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    tbody tr {
+      &:hover {
+        background-color: rgba(var(--v-theme-on-surface), 0.02) !important;
+      }
+
+      td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+        color: rgb(var(--v-theme-on-surface));
+      }
+    }
+  }
+
+  // Input field improvements
+  .v-field--variant-outlined {
+    .v-field__outline {
+      --v-field-border-opacity: 0.3;
+    }
+
+    &:hover .v-field__outline {
+      --v-field-border-opacity: 0.5;
+    }
+
+    &.v-field--focused .v-field__outline {
+      --v-field-border-opacity: 1;
+    }
+  }
+
+  // Button group improvements
+  .v-btn-group {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+
+    .v-btn {
+      border-color: rgba(0, 0, 0, 0.12) !important;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+  }
+
+  // Alert improvements for better visibility
+  .v-alert {
+    &.v-alert--variant-tonal {
+      &.bg-warning {
+        background-color: rgba(var(--v-theme-warning), 0.15) !important;
+        color: rgba(var(--v-theme-on-surface), 0.9) !important;
+
+        .v-icon {
+          color: rgb(var(--v-theme-warning)) !important;
+        }
+      }
+
+      &.bg-error {
+        background-color: rgba(var(--v-theme-error), 0.12) !important;
+        color: rgba(var(--v-theme-on-surface), 0.9) !important;
+      }
+
+      &.bg-success {
+        background-color: rgba(var(--v-theme-success), 0.12) !important;
+        color: rgba(var(--v-theme-on-surface), 0.9) !important;
+      }
+
+      &.bg-info {
+        background-color: rgba(var(--v-theme-info), 0.12) !important;
+        color: rgba(var(--v-theme-on-surface), 0.9) !important;
+      }
+    }
+  }
+
+  // Chip improvements
+  .v-chip {
+    &.v-chip--variant-tonal {
+      font-weight: 500;
+    }
+  }
+
+  // Expansion panels
+  .v-expansion-panel {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.05),
+      0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+
+    &::before {
+      box-shadow: none !important;
+    }
+
+    .v-expansion-panel-title {
+      &:hover {
+        background-color: rgba(var(--v-theme-on-surface), 0.02);
+      }
+    }
+  }
+
+  // Progress linear
+  .v-progress-linear {
+    background-color: rgb(var(--v-theme-surface-variant)) !important;
+  }
+
+  // Dividers
+  .v-divider {
+    border-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  // Menu and dropdown improvements
+  .v-menu > .v-overlay__content,
+  .v-list {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  // Dialog improvements
+  .v-dialog > .v-overlay__content > .v-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  // Scrollbar for light theme
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Transaction preview card
+  .transaction-preview-card {
+    .table-container {
+      background-color: rgb(var(--v-theme-surface));
+    }
+  }
+}

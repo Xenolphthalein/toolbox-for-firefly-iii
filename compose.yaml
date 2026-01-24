@@ -1,0 +1,98 @@
+# Docker Compose configuration for FireflyIII Toolbox
+# 
+# This file provides an example setup for running FireflyIII Toolbox.
+#
+# SECURITY NOTES:
+#   - By default, the container binds to 127.0.0.1 (localhost only).
+#   - For external access, use a reverse proxy (nginx, Caddy, Traefik) with TLS.
+#   - Never expose port 3000 directly to the internet without authentication.
+#   - AUTH_METHODS and AUTH_SESSION_SECRET are REQUIRED in production.
+#
+# Usage:
+#   1. Copy this file to docker-compose.yml
+#   2. Generate a session secret: openssl rand -hex 32
+#   3. Configure required environment variables (see below)
+#   4. Run: docker compose up -d
+#   5. Access via reverse proxy or http://localhost:3000
+
+services:
+  firefly-toolbox:
+    build: .
+    # Or use pre-built image when available:
+    # image: ghcr.io/xenolphthalein/firefly-toolbox:latest
+    container_name: firefly-toolbox
+    restart: unless-stopped
+    ports:
+      #    SECURITY WARNING: Do NOT change 127.0.0.1 to 0.0.0.0!
+      #    Binding to 0.0.0.0:3000 exposes this service to the entire network
+      #    without TLS encryption, making session cookies and credentials
+      #    vulnerable to interception.
+      #
+      #    For external access, ALWAYS use a reverse proxy (nginx, Caddy, Traefik)
+      #    that terminates TLS and handles authentication.
+      - "127.0.0.1:3000:3000"
+    environment:
+      # ===========================================
+      # REQUIRED: Authentication
+      # ===========================================
+      # Comma-separated list of enabled auth methods.
+      # Options: 'basic', 'oidc', 'firefly', 'none' (not recommended)
+      # Examples: AUTH_METHODS=firefly or AUTH_METHODS=basic,firefly
+      - AUTH_METHODS=basic
+      
+      # Basic Auth credentials (required when 'basic' is in AUTH_METHODS)
+      - AUTH_BASIC_USERNAME=admin
+      - AUTH_BASIC_PASSWORD=changeme  # CHANGE THIS!
+      
+      # Session secret - REQUIRED in production
+      # Generate with: openssl rand -hex 32
+      - AUTH_SESSION_SECRET=generate-a-random-secret-here  # CHANGE THIS!
+      
+      # ===========================================
+      # REQUIRED: FireflyIII Configuration
+      # ===========================================
+      - FIREFLY_API_URL=http://firefly:8080
+      - FIREFLY_API_TOKEN=your_firefly_api_token_here  # CHANGE THIS!
+      
+      # ===========================================
+      # REQUIRED: CORS Configuration
+      # ===========================================
+      # Set to your actual frontend URL (e.g., https://toolbox.example.com)
+      - CORS_ORIGINS=http://localhost:3000
+      
+      # Public URL for OAuth callbacks (set when using reverse proxy)
+      # - APP_URL=https://toolbox.example.com
+      
+      # ===========================================
+      # Optional: AI Configuration
+      # ===========================================
+      # Choose provider: 'openai' or 'ollama' (auto-detects if not set)
+      # - AI_PROVIDER=openai
+      
+      # OpenAI Configuration
+      - OPENAI_API_KEY=
+      - OPENAI_API_URL=https://api.openai.com/v1
+      - OPENAI_MODEL=gpt-4o-mini
+      
+      # Ollama Configuration (alternative to OpenAI)
+      # - OLLAMA_API_URL=http://localhost:11434
+      # - OLLAMA_MODEL=llama3.2
+      
+      # ===========================================
+      # Server Configuration
+      # ===========================================
+      - NODE_ENV=production
+      - PORT=3000
+      # - LOG_LEVEL=info  # Options: debug, info, warn, error
+    networks:
+      - firefly_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  firefly_network:
+    driver: bridge

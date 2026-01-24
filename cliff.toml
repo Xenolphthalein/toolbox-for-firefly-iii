@@ -1,0 +1,64 @@
+# git-cliff configuration file
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+# Template for the changelog body
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }}))\
+{% endfor %}
+{% endfor %}
+"""
+# Remove leading and trailing whitespace
+trim = true
+
+[git]
+# Parse conventional commits
+conventional_commits = true
+# Filter out unconventional commits
+filter_unconventional = false
+# Process each line of a commit as an individual commit
+split_commits = false
+# Protect against sensitive info in commits
+protect_breaking_commits = false
+# Filter out commits that match this regex
+filter_commits = false
+# Sort commits by date
+sort_commits = "newest"
+
+# Commit groups and their display names
+commit_parsers = [
+  { message = "^feat", group = "✨ Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^doc", group = "📚 Documentation" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️ Refactoring" },
+  { message = "^style", group = "🎨 Styling" },
+  { message = "^test", group = "🧪 Testing" },
+  { message = "^build", group = "🏗️ Build" },
+  { message = "^ci", group = "👷 CI/CD" },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore\\(deps\\)", group = "📦 Dependencies" },
+  { message = "^chore", group = "🔧 Miscellaneous" },
+  { message = "^revert", group = "⏪ Reverted" },
+  # Catch-all for non-conventional commits
+  { body = ".*", group = "📝 Other" },
+]
+
+# Regex for parsing and grouping commits
+commit_preprocessors = [
+  # Remove issue numbers from commits
+  { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
+]
+
+# Link patterns for external references
+link_parsers = [
+  { pattern = "#(\\d+)", href = "https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/issues/$1" },
+  { pattern = "RFC(\\d+)", text = "ietf-rfc$1", href = "https://datatracker.ietf.org/doc/html/rfc$1" },
+]
+
+[remote.github]
+owner = "{{ get_env(name=\"GITHUB_REPOSITORY_OWNER\", default=\"\") }}"
+repo = "{{ get_env(name=\"GITHUB_REPOSITORY\", default=\"\") | split(pat=\"/\") | last }}"

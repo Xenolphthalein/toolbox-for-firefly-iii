@@ -1,0 +1,172 @@
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
+.pnp
+.pnp.js
+.pnpm-debug.log*
+
+# ===========================
+# Build outputs
+# ===========================
+dist/
+build/
+lib/
+out/
+*.tsbuildinfo
+
+# ===========================
+# Environment & Configuration
+# ===========================
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+*.local
+
+# ===========================
+# IDE & Editors
+# ===========================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+!.vscode/launch.json.example
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ===========================
+# OS generated files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===========================
+# Logs
+# ===========================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===========================
+# Testing & Coverage
+# ===========================
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+htmlcov/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ===========================
+# Cache directories
+# ===========================
+.cache/
+.parcel-cache/
+.vite/
+*.cache
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# ===========================
+# TypeScript
+# ===========================
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Compiled output in source directories (should be in dist/)
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.d.ts.map
+
+# ===========================
+# Vite
+# ===========================
+*.local
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# ===========================
+# Runtime & Debug
+# ===========================
+*.pid
+*.pid.lock
+*.seed
+*.pid
+pids/
+
+# ===========================
+# Optional npm cache
+# ===========================
+.npm/
+.yarn/
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# ===========================
+# Package manager locks (keep one)
+# ===========================
+# Uncomment the ones you don't use:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ===========================
+# Temporary files
+# ===========================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===========================
+# Secrets & Credentials
+# ===========================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ===========================
+# Docker (if used)
+# ===========================
+.docker/
+docker-compose.override.yml
+
+# ===========================
+# Miscellaneous
+# ===========================
+*.gz
+*.zip
+*.tar
+*.rar
+.history/
