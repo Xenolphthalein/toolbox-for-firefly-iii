@@ -62,5 +62,5 @@ link_parsers = [
 ]
 
 [remote.github]
-owner = "{{ get_env(name=\"GITHUB_REPOSITORY_OWNER\", default=\"\") }}"
-repo = "{{ get_env(name=\"GITHUB_REPOSITORY\", default=\"\") | split(pat=\"/\") | last }}"
+owner = "Xenolphthalein"
+repo = "firefly-toolbox"
