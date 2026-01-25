@@ -456,13 +456,13 @@ export function validateData<T>(
     return { success: true, data: result.data };
   }
 
-  const errorMessage = result.error.errors
+  const errorMessage = result.error.issues
     .map((e) => `${e.path.join('.')}: ${e.message}`)
     .join(', ');
 
   console.warn(`[Validation${context ? ` - ${context}` : ''}] ${errorMessage}`, {
     data,
-    errors: result.error.errors,
+    errors: result.error.issues,
   });
 
   return {
@@ -504,7 +504,7 @@ export function validateArray<T>(
       invalidCount++;
       console.warn(`[Validation${context ? ` - ${context}` : ''}] Invalid item:`, {
         item,
-        errors: result.error.errors,
+        errors: result.error.issues,
       });
     }
   }

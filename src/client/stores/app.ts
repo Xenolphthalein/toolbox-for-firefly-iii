@@ -180,7 +180,7 @@ export const useAppStore = defineStore(
   {
     persist: {
       key: 'firefly-toolbox-settings',
-      paths: [
+      pick: [
         'themeId',
         'darkMode',
         'navigationDrawer',

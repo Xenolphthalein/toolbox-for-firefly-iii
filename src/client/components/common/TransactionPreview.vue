@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import type { FireflyTransactionSplit } from '@shared/types/firefly';
 
 interface Props {
@@ -112,8 +112,6 @@ const isRefreshing = computed(
 const emit = defineEmits<{
   (e: 'load-more'): void;
 }>();
-
-const scrollContainer = ref<HTMLElement | null>(null);
 
 // Use count prop if provided, otherwise fall back to transactions length
 const totalCount = computed(() => props.count ?? props.transactions.length);
