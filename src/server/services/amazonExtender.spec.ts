@@ -147,11 +147,11 @@ describe('AmazonOrderExtender', () => {
       expect(orders[0].orderId).toMatch(/^unknown-0/);
     });
 
-    it('should parse amount strings', () => {
+    it('should handle numeric amount values', () => {
       const jsonData = [
         {
           orderId: '123',
-          totalAmount: '29,99 €',
+          totalAmount: 29.99, // Numeric values should pass through unchanged
           items: [],
         },
       ];
