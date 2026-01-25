@@ -76,8 +76,8 @@ if (config.nodeEnv === 'production') {
   const clientPath = path.resolve(__dirname, '../client');
   app.use(express.static(clientPath));
 
-  // SPA fallback
-  app.get('*', (_req, res) => {
+  // SPA fallback - Express 5 requires named wildcard parameter
+  app.get('*splat', (_req, res) => {
     res.sendFile(path.join(clientPath, 'index.html'));
   });
 }
