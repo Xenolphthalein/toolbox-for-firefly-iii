@@ -25,6 +25,8 @@ split_commits = false
 protect_breaking_commits = false
 # Filter out commits that match this regex
 filter_commits = false
+# Regex for matching git tags (version tags)
+tag_pattern = "v[0-9].*"
 # Sort commits by date
 sort_commits = "newest"
 
