@@ -209,6 +209,7 @@ AI features (category and tag suggestions) require either OpenAI or a local Olla
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `DEFAULT_LOCALE` | Default language: `en` or `de` | Auto-detect from browser |
 | `FINTS_PRODUCT_ID` | FinTS registration ID for German bank imports | - |
 | `LOG_LEVEL` | `error`, `warn`, `info`, or `debug` | `info` |
 | `NUMBER_FORMAT_LOCALE` | Locale for parsing numbers | `en-US` |

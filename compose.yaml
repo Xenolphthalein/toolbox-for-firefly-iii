@@ -84,6 +84,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       # - LOG_LEVEL=info  # Options: debug, info, warn, error
+      # - DEFAULT_LOCALE=en  # Default language: 'en' or 'de'
     networks:
       - firefly_network
     healthcheck:

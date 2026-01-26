@@ -174,7 +174,7 @@ const { t } = useI18n();
 
 **Locale detection priority:**
 1. User preference in localStorage (`firefly-toolbox-settings`)
-2. Environment variable `VITE_DEFAULT_LOCALE`
+2. Environment variable `DEFAULT_LOCALE` (or `VITE_DEFAULT_LOCALE` for backward compatibility)
 3. Browser language
 4. Fallback to English
 
@@ -250,5 +250,5 @@ Configuration via environment variables (see `.env.example` for full details):
 
 ### Other
 - `FINTS_PRODUCT_ID` - FinTS product registration ID for German bank imports
-- `VITE_DEFAULT_LOCALE` - Default language locale (`en` or `de`)
+- `DEFAULT_LOCALE` - Default language locale (`en` or `de`). Can also use `VITE_DEFAULT_LOCALE` for backward compatibility
 - `NUMBER_FORMAT_LOCALE` / `NUMBER_FORMAT_DECIMAL` / `NUMBER_FORMAT_THOUSANDS` - Number parsing settings

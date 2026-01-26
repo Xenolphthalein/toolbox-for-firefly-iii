@@ -13,7 +13,7 @@ const STORAGE_KEY = 'firefly-toolbox-settings';
 /**
  * Get the initial locale based on priority:
  * 1. LocalStorage (user preference)
- * 2. Environment variable (VITE_DEFAULT_LOCALE)
+ * 2. Environment variable (DEFAULT_LOCALE)
  * 3. Browser language
  * 4. Fallback to 'en'
  */
@@ -31,8 +31,8 @@ function getInitialLocale(): SupportedLocale {
     // Ignore localStorage errors
   }
 
-  // 2. Check environment variable
-  const envLocale = import.meta.env.VITE_DEFAULT_LOCALE;
+  // 2. Check environment variable (try generic first, fallback to VITE_ prefixed)
+  const envLocale = (typeof DEFAULT_LOCALE !== 'undefined' ? DEFAULT_LOCALE : import.meta.env.VITE_DEFAULT_LOCALE);
   if (envLocale && SUPPORTED_LOCALES.includes(envLocale as SupportedLocale)) {
     return envLocale as SupportedLocale;
   }

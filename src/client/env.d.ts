@@ -11,3 +11,6 @@ interface ImportMetaEnv {
   readonly VITE_DEFAULT_LOCALE?: string;
   // Vite's built-in env vars are inherited from vite/client
 }
+
+// Allow access to non-VITE_ prefixed env vars for production
+declare const DEFAULT_LOCALE: string | undefined;
