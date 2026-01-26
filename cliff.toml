@@ -32,7 +32,14 @@ sort_commits = "newest"
 
 # Commit groups and their display names
 commit_parsers = [
+  # Skip merge commits
+  { message = "^Merge pull request", skip = true },
+  { message = "^Merge branch", skip = true },
+  # Skip release commits
+  { message = "^chore\\(release\\)", skip = true },
+  # Conventional commit types with scopes (order matters - more specific first)
   { message = "^feat", group = "✨ Features" },
+  { message = "^fix\\(deps\\)", group = "📦 Dependencies" },
   { message = "^fix", group = "🐛 Bug Fixes" },
   { message = "^doc", group = "📚 Documentation" },
   { message = "^perf", group = "⚡ Performance" },
@@ -41,7 +48,6 @@ commit_parsers = [
   { message = "^test", group = "🧪 Testing" },
   { message = "^build", group = "🏗️ Build" },
   { message = "^ci", group = "👷 CI/CD" },
-  { message = "^chore\\(release\\)", skip = true },
   { message = "^chore\\(deps\\)", group = "📦 Dependencies" },
   { message = "^chore", group = "🔧 Miscellaneous" },
   { message = "^revert", group = "⏪ Reverted" },
