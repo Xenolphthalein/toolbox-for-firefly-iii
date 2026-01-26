@@ -163,7 +163,9 @@ export function useTools(): UseToolsReturn {
       // Determine disabled reason from backend requiresConfig
       let disabledReason = '';
       if (!available && backendStatus?.requiresConfig) {
-        if (backendStatus.requiresConfig.includes('AI_PROVIDER')) {
+        if (backendStatus.requiresConfig.includes('FINTS_PRODUCT_ID')) {
+          disabledReason = 'FinTS Product ID required';
+        } else if (backendStatus.requiresConfig.includes('AI_PROVIDER')) {
           disabledReason = 'Configure AI first';
         } else if (backendStatus.requiresConfig.includes('FIREFLY_API_URL')) {
           disabledReason = 'Connect to FireflyIII first';
