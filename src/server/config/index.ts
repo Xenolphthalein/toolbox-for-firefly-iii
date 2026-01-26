@@ -8,11 +8,12 @@ const __dirname = path.dirname(__filename);
 // Find .env file - works in both dev (src/server/config) and prod (dist/server/config)
 // In dev with tsx: __dirname is src/server/config, .env is at project root (3 levels up)
 // In prod: __dirname is dist/server/config, .env is at project root (3 levels up)
+// Use debug: false to suppress dotenv promotional messages in production
 const envPath = path.resolve(__dirname, '../../../.env');
-dotenv.config({ path: envPath });
+dotenv.config({ path: envPath, debug: false });
 
 // Also try loading from current working directory as fallback
-dotenv.config();
+dotenv.config({ debug: false });
 
 import type { AuthMethod } from '../../shared/types/auth.js';
 import crypto from 'crypto';
