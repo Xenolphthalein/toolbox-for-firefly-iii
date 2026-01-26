@@ -281,7 +281,7 @@
             </div>
             <div class="d-flex align-center justify-space-between">
               <span class="text-body-2 text-medium-emphasis">License</span>
-              <span class="text-body-2 font-weight-medium">MIT</span>
+              <span class="text-body-2 font-weight-medium">Unlicense</span>
             </div>
             <v-divider class="my-2" />
             <div class="d-flex align-center">
