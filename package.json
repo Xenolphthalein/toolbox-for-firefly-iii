@@ -50,6 +50,7 @@
     "express-session": "^1.19.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
+    "memorystore": "^1.6.7",
     "multer": "^2.0.1",
     "openai": "^6.16.0",
     "openid-client": "^6.8.1",

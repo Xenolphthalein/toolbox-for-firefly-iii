@@ -1,11 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
+import createMemoryStore from 'memorystore';
 import { config, isAuthRequired } from '../config/index.js';
 import { shouldUseSecureCookies } from './security.js';
 import { createLogger } from '../utils/logger.js';
 import type { AuthUser } from '../../shared/types/auth.js';
 
 const logger = createLogger('AuthMiddleware');
+
+// Create production-ready memory store (auto-prunes expired sessions)
+const MemoryStore = createMemoryStore(session);
 
 // Extend Express Request with session data
 declare module 'express-session' {
@@ -22,6 +26,10 @@ declare module 'express-session' {
  * Create session middleware with proper configuration.
  * In production, AUTH_SESSION_SECRET must be explicitly set.
  * Cookie secure flag is set based on APP_URL scheme (https = secure).
+ *
+ * Uses memorystore instead of the default MemoryStore to:
+ * - Automatically prune expired sessions (prevents memory leaks)
+ * - Avoid the "MemoryStore is not designed for production" warning
  */
 export function createSessionMiddleware() {
   const secret = config.auth.sessionSecret;
@@ -41,15 +49,21 @@ export function createSessionMiddleware() {
   // Determine if secure cookies should be used based on environment and APP_URL
   const useSecureCookies = shouldUseSecureCookies();
 
+  // Session expiry in milliseconds (24 hours)
+  const sessionMaxAge = 24 * 60 * 60 * 1000;
+
   return session({
     secret,
     name: 'firefly_toolbox_session',
     resave: false,
     saveUninitialized: false,
+    store: new MemoryStore({
+      checkPeriod: sessionMaxAge, // Prune expired sessions every 24 hours
+    }),
     cookie: {
       secure: useSecureCookies,
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: sessionMaxAge,
       sameSite: 'lax', // Lax mode to allow OAuth redirect flows
     },
   });
