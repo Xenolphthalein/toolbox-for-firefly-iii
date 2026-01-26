@@ -119,6 +119,7 @@ npm run build        # Production build
 npm run typecheck    # TypeScript validation (run after changes)
 npm run lint         # ESLint check
 npm run format       # Prettier formatting
+npm run i18n:check   # Check for duplicate translation keys
 ```
 
 **Always run `npm run typecheck` and `npm run lint` after making changes.**
@@ -142,6 +143,57 @@ npm run format       # Prettier formatting
 1. Create in `src/client/composables/`
 2. Export from `src/client/composables/index.ts`
 3. Return reactive refs and functions
+
+### Working with Internationalization (i18n)
+
+The application uses **vue-i18n** for multi-language support. Currently supports English (`en`) and German (`de`).
+
+**Using translations in components:**
+```vue
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+</script>
+
+<template>
+  <v-btn>{{ t('common.buttons.save') }}</v-btn>
+  <h1>{{ t('duplicates.title') }}</h1>
+</template>
+```
+
+**Translation file structure:**
+- Files: `src/client/locales/en.json`, `src/client/locales/de.json`
+- Organized by feature/section (e.g., `common`, `duplicates`, `categories`)
+- Use dot notation: `section.subsection.key`
+
+**Adding new translations:**
+1. Add key to both `en.json` and `de.json` in the same location
+2. Run `npm run i18n:check` to verify no duplicate keys exist
+3. Use `t('your.translation.key')` in components
+
+**Locale detection priority:**
+1. User preference in localStorage (`firefly-toolbox-settings`)
+2. Environment variable `VITE_DEFAULT_LOCALE`
+3. Browser language
+4. Fallback to English
+
+**Changing locale programmatically:**
+```typescript
+import { setLocale, getLocale, SUPPORTED_LOCALES } from '@/plugins/i18n';
+
+// Change language
+setLocale('de');
+
+// Get current language
+const current = getLocale(); // 'en' | 'de'
+```
+
+**Adding a new language:**
+1. Create `src/client/locales/{locale}.json` (copy from `en.json`)
+2. Add locale to `SUPPORTED_LOCALES` in `src/client/plugins/i18n.ts`
+3. Import and add to `messages` object in i18n plugin
+4. Translate all keys in the new file
 
 ---
 
@@ -198,4 +250,5 @@ Configuration via environment variables (see `.env.example` for full details):
 
 ### Other
 - `FINTS_PRODUCT_ID` - FinTS product registration ID for German bank imports
+- `VITE_DEFAULT_LOCALE` - Default language locale (`en` or `de`)
 - `NUMBER_FORMAT_LOCALE` / `NUMBER_FORMAT_DECIMAL` / `NUMBER_FORMAT_THOUSANDS` - Number parsing settings
