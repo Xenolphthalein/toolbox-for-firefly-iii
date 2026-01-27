@@ -21,6 +21,7 @@
       "saveConfig": "Save Config",
       "addColumn": "Add Column",
       "viewOnGitHub": "View on GitHub",
+      "foundBug": "Found a bug?",
       "disconnect": "Disconnect",
       "connect": "Connect to Bank",
       "fetchTransactions": "Fetch Transactions",
