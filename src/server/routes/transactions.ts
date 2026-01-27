@@ -16,11 +16,11 @@ import {
 const router = Router();
 const logger = createLogger('Transactions');
 
-// Middleware to check FireflyIII configuration
+// Middleware to check Firefly III configuration
 router.use((_req: Request, _res: Response, next) => {
   if (!isFireflyConfigured()) {
     throw badRequest(
-      'FireflyIII is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
+      'Firefly III is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
     );
   }
   next();

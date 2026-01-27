@@ -37,7 +37,7 @@ const router = Router();
 router.use((_req: Request, _res: Response, next) => {
   if (!isFireflyConfigured()) {
     throw badRequest(
-      'FireflyIII is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
+      'Firefly III is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
     );
   }
   next();
@@ -231,7 +231,7 @@ router.post(
 );
 
 // Apply category suggestions
-// Rate limited to prevent excessive API calls to FireflyIII
+// Rate limited to prevent excessive API calls to Firefly III
 router.post(
   '/apply-categories',
   bulkOperationRateLimit,
@@ -253,7 +253,7 @@ router.post(
 );
 
 // Apply tag suggestions
-// Rate limited to prevent excessive API calls to FireflyIII
+// Rate limited to prevent excessive API calls to Firefly III
 router.post(
   '/apply-tags',
   bulkOperationRateLimit,

@@ -12,7 +12,7 @@ import type {
 const logger = createLogger('AmazonExtender');
 
 // Tag applied to transactions processed by the Amazon Extender
-export const AMAZON_EXTENDER_TAG = 'FFIII Toolbox: Amazon Extender';
+export const AMAZON_EXTENDER_TAG = 'Toolbox for FFIII: Amazon Extender';
 
 export interface StreamEvent<T = unknown> {
   type: 'progress' | 'result' | 'error' | 'complete';
@@ -107,7 +107,7 @@ export class AmazonOrderExtender {
   }
 
   /**
-   * Find potential Amazon transactions in FireflyIII
+   * Find potential Amazon transactions in Firefly III
    */
   async findAmazonTransactions(
     startDate?: string,
@@ -123,7 +123,7 @@ export class AmazonOrderExtender {
       return this.cachedAmazonTransactions;
     }
 
-    logger.debug('Fetching transactions from FireflyIII', { startDate, endDate });
+    logger.debug('Fetching transactions from Firefly III', { startDate, endDate });
     const transactions = await this.fireflyApi.getAllTransactions(startDate, endDate);
     logger.debug(`Fetched ${transactions.length} total transactions`);
 

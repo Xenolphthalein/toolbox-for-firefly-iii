@@ -1,4 +1,4 @@
-// FireflyIII API Types
+// Firefly III API Types
 
 // Subscription (formerly "Bill") - tracks expected recurring expenses
 export interface FireflySubscription {

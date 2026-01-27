@@ -211,7 +211,7 @@ const COMMON_KEY_PROMOTIONS: Record<string, string> = {
   'Configure your column mapping to see a preview': 'common.help.configureMappingToPreview',
 
   // Misc duplicates
-  'Firefly-III Toolbox': 'app.title',
+  'Toolbox for Firefly III': 'app.title',
   'Connect to your bank and fetch transactions to see a preview': 'common.messages.connectToBankToPreview',
   "Click 'Match Transactions' to find matches between your PayPal activity and Firefly transactions": 'common.messages.clickToMatchPaypal',
   'Requires AI configuration (OpenAI or Ollama)': 'common.labels.requiresAI',

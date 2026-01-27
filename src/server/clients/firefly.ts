@@ -61,16 +61,16 @@ export class FireflyApiClient {
       });
 
       if (status === 401) {
-        throw new Error('FireflyIII authentication failed. Please check your API token.');
+        throw new Error('Firefly III authentication failed. Please check your API token.');
       }
       if (status === 404) {
-        throw new Error('FireflyIII resource not found.');
+        throw new Error('Firefly III resource not found.');
       }
       if (status === 422) {
         const validationErrors = error.response?.data?.errors;
         throw new Error(`Validation error: ${JSON.stringify(validationErrors)}`);
       }
-      throw new Error(`FireflyIII API error: ${message}`);
+      throw new Error(`Firefly III API error: ${message}`);
     }
     throw error;
   }
@@ -639,11 +639,11 @@ export class FireflyApiClient {
   async testConnection(): Promise<{ success: boolean; message: string }> {
     try {
       await this.client.get('/about/user');
-      return { success: true, message: 'Successfully connected to FireflyIII' };
+      return { success: true, message: 'Successfully connected to Firefly III' };
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.code === 'ECONNREFUSED') {
-          return { success: false, message: 'Could not connect to FireflyIII server' };
+          return { success: false, message: 'Could not connect to Firefly III server' };
         }
         if (error.response?.status === 401) {
           return { success: false, message: 'Invalid API token' };

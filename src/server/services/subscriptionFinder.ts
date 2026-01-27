@@ -805,7 +805,7 @@ export class SubscriptionFinder {
     // Create a new rule group for subscription rules
     return this.fireflyApi.createRuleGroup({
       title: RULE_GROUP_TITLE,
-      description: 'Auto-generated rules for subscriptions created by Firefly Toolbox',
+      description: 'Auto-generated rules for subscriptions created by Toolbox for Firefly III',
       active: true,
     });
   }

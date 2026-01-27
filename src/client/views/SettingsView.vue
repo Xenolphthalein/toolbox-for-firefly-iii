@@ -90,7 +90,7 @@
         </v-card-actions>
       </v-card>
 
-      <!-- FireflyIII Configuration (Read-only) -->
+      <!-- Firefly III Configuration (Read-only) -->
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center">
           <v-avatar color="primary" size="32" variant="tonal" class="mr-3">

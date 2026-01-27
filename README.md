@@ -1,17 +1,17 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="public/logo.png">
   <source media="(prefers-color-scheme: light)" srcset="public/logo_light_mode.png">
-  <img alt="Firefly-III Toolbox" src="public/logo.png" width="80">
+  <img alt="Toolbox for Firefly III" src="public/logo.png" width="80">
 </picture>
 
-# Firefly-III Toolbox
+# Toolbox for Firefly III
 
 [![License: Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-available-2496ED?logo=docker&logoColor=white)](https://github.com/xenolphthalein/firefly-toolbox/pkgs/container/firefly-toolbox)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
 
-Web automation suite for [FireflyIII](https://firefly-iii.org). Includes tools for duplicate detection, subscription analysis, AI-powered categorization, bank imports and transaction enrichment via Amazon/PayPal exports.
+Web automation suite for [Firefly III](https://firefly-iii.org). Includes tools for duplicate detection, subscription analysis, AI-powered categorization, bank imports and transaction enrichment via Amazon/PayPal exports.
 
 > [!WARNING]
 > **AI-Generated Code Disclosure**
@@ -24,7 +24,7 @@ Web automation suite for [FireflyIII](https://firefly-iii.org). Includes tools f
 
 ## Table of Contents
 
-- [Firefly-III Toolbox](#fireflyiii-toolbox)
+- [Toolbox for Firefly III](#toolbox-for-firefly-iii)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
     - [Duplicate Finder](#duplicate-finder)
@@ -56,15 +56,15 @@ Web automation suite for [FireflyIII](https://firefly-iii.org). Includes tools f
 
 ### Duplicate Finder
 
-Identifies potential duplicates by comparing amounts, dates, and descriptions. Grouping is based on a multi-factor confidence score. Review matches and link them directly in FireflyIII.
+Identifies potential duplicates by comparing amounts, dates, and descriptions. Grouping is based on a multi-factor confidence score. Review matches and link them directly in Firefly III.
 
 ### Subscription Finder
 
-Detects recurring payment patterns (weekly, monthly, quarterly, annual) based on amounts, merchants, and timing. Convert detected patterns into FireflyIII recurring transactions.
+Detects recurring payment patterns (weekly, monthly, quarterly, annual) based on amounts, merchants, and timing. Convert detected patterns into Firefly III recurring transactions.
 
 ### AI Category Suggestions
 
-Suggests categories for uncategorized transactions using OpenAI or Ollama. Matching is done against existing FireflyIII categories with confidence scoring and bulk application.
+Suggests categories for uncategorized transactions using OpenAI or Ollama. Matching is done against existing Firefly III categories with confidence scoring and bulk application.
 
 ### AI Tag Suggestions
 
@@ -76,7 +76,7 @@ Enriches transactions with Amazon order details (item names, IDs). Requires JSON
 
 ### PayPal Extender
 
-Adds merchant names, emails, and transaction IDs to FireflyIII transactions using PayPal CSV activity exports.
+Adds merchant names, emails, and transaction IDs to Firefly III transactions using PayPal CSV activity exports.
 
 ### CSV Importer
 
@@ -138,14 +138,14 @@ Configuration is handled through environment variables. Copy `.env.example` to `
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FIREFLY_API_URL` | URL of your FireflyIII instance | Required |
-| `FIREFLY_API_TOKEN` | FireflyIII Personal Access Token | Required |
+| `FIREFLY_API_URL` | URL of your Firefly III instance | Required |
+| `FIREFLY_API_TOKEN` | Firefly III Personal Access Token | Required |
 | `PORT` | Server port | `3000` |
 | `APP_URL` | Public URL (for OAuth callbacks) | `http://localhost:3000` |
 | `NODE_ENV` | `development` or `production` | `development` |
 | `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | Localhost URLs |
 
-Create a Personal Access Token in FireflyIII under Profile, OAuth, Personal Access Tokens. See the [FireflyIII documentation](https://docs.firefly-iii.org/how-to/firefly-iii/features/api/#personal-access-tokens) for details.
+Create a Personal Access Token in Firefly III under Profile, OAuth, Personal Access Tokens. See the [Firefly III documentation](https://docs.firefly-iii.org/how-to/firefly-iii/features/api/#personal-access-tokens) for details.
 
 ### Authentication
 
@@ -174,7 +174,7 @@ If `AUTH_METHODS` is not set, all configured methods are auto-detected. Set it e
 | `AUTH_OIDC_CLIENT_SECRET` | Client secret |
 | `AUTH_OIDC_SCOPES` | Scopes (default: `openid profile email`) |
 
-**FireflyIII OAuth**
+**Firefly III OAuth**
 
 | Variable | Description |
 |----------|-------------|
@@ -253,11 +253,11 @@ When running behind a reverse proxy (nginx, Caddy, Traefik), configure the follo
 
 ### Security Recommendations
 
-The toolbox proxies all requests to FireflyIII using your API token. A compromised instance means full access to your financial data.
+The toolbox proxies all requests to Firefly III using your API token. A compromised instance means full access to your financial data.
 
 **Single-Tenant Architecture**
 
-This application is designed for single-tenant use. All users share the same FireflyIII API token, meaning everyone who can log in has identical access to all transactions, categories, and tags. This is intentional for households sharing a single budget. If you need per-user access control, deploy separate instances with separate API tokens.
+This application is designed for single-tenant use. All users share the same Firefly III API token, meaning everyone who can log in has identical access to all transactions, categories, and tags. This is intentional for households sharing a single budget. If you need per-user access control, deploy separate instances with separate API tokens.
 
 **Production Checklist**
 
@@ -292,9 +292,9 @@ Ensure `CORS_ORIGINS` matches your URL exactly without trailing slashes. Set `AP
 
 Add `X-Forwarded-Proto` header in your proxy configuration and ensure `APP_URL` matches the actual access URL.
 
-**401 Unauthorized from FireflyIII**
+**401 Unauthorized from Firefly III**
 
-Verify your API token is valid and not expired. Generate a new Personal Access Token in FireflyIII if needed.
+Verify your API token is valid and not expired. Generate a new Personal Access Token in Firefly III if needed.
 
 **Connection Refused**
 
