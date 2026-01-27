@@ -64,6 +64,12 @@
           href="https://github.com/xenolphthalein/firefly-toolbox"
           target="_blank"
         />
+        <v-list-item
+          prepend-icon="mdi-bug-outline"
+          :title="t('common.buttons.foundBug')"
+          href="https://github.com/xenolphthalein/firefly-toolbox/issues"
+          target="_blank"
+        />
         <v-divider v-if="authStore.isAuthenticated" />
         <v-list-item
           v-if="authStore.isAuthenticated"

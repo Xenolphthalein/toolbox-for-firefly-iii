@@ -21,6 +21,7 @@
       "saveConfig": "Konfiguration speichern",
       "addColumn": "Spalte hinzufügen",
       "viewOnGitHub": "Auf GitHub ansehen",
+      "foundBug": "Fehler gefunden?",
       "disconnect": "Trennen",
       "connect": "Mit Bank verbinden",
       "fetchTransactions": "Transaktionen abrufen",
