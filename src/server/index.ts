@@ -87,13 +87,13 @@ app.use(errorHandler);
 
 // Start server
 const server = app.listen(config.port, () => {
-  loggers.server.info(`Firefly-III Toolbox server running on port ${config.port}`);
+  loggers.server.info(`Toolbox for Firefly III server running on port ${config.port}`);
   loggers.server.info(`Environment: ${config.nodeEnv}`);
 
   if (config.firefly.apiUrl) {
-    loggers.server.info(`FireflyIII API: ${config.firefly.apiUrl}`);
+    loggers.server.info(`Firefly III API: ${config.firefly.apiUrl}`);
   } else {
-    loggers.server.warn('FireflyIII API not configured');
+    loggers.server.warn('Firefly III API not configured');
   }
 
   if (config.ai.provider === 'openai' && config.ai.apiKey) {

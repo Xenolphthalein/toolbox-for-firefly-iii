@@ -56,11 +56,11 @@ function getExtender(sessionId: string): AmazonOrderExtender {
   return extender;
 }
 
-// Middleware to check FireflyIII configuration
+// Middleware to check Firefly III configuration
 router.use((_req: Request, _res: Response, next) => {
   if (!isFireflyConfigured()) {
     throw badRequest(
-      'FireflyIII is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
+      'Firefly III is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
     );
   }
   next();
@@ -227,7 +227,7 @@ router.post(
     const filtered = excludeProcessed
       ? transactions.filter((t) => {
           const split = t.attributes.transactions[0];
-          return !split?.tags?.includes('FFIII Toolbox: Amazon Extender');
+          return !split?.tags?.includes('Toolbox for FFIII: Amazon Extender');
         })
       : transactions;
 
@@ -311,7 +311,7 @@ router.post(
 );
 
 // Apply matched descriptions and notes
-// Rate limited to prevent excessive API calls to FireflyIII
+// Rate limited to prevent excessive API calls to Firefly III
 router.post(
   '/apply',
   bulkOperationRateLimit,

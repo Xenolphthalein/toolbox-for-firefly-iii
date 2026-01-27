@@ -1,6 +1,6 @@
-# Docker Compose configuration for Firefly-III Toolbox
+# Docker Compose configuration for Toolbox for Firefly III
 # 
-# This file provides an example setup for running Firefly-III Toolbox.
+# This file provides an example setup for running Toolbox for Firefly III.
 #
 # SECURITY NOTES:
 #   - By default, the container binds to 127.0.0.1 (localhost only).
@@ -49,7 +49,7 @@ services:
       - AUTH_SESSION_SECRET=generate-a-random-secret-here  # CHANGE THIS!
       
       # ===========================================
-      # REQUIRED: FireflyIII Configuration
+      # REQUIRED: Firefly III Configuration
       # ===========================================
       - FIREFLY_API_URL=http://firefly:8080
       - FIREFLY_API_TOKEN=your_firefly_api_token_here  # CHANGE THIS!

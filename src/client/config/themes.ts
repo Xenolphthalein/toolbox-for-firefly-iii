@@ -54,8 +54,8 @@ export const themes: AppTheme[] = [
   },
   {
     id: 'firefly',
-    name: 'FireflyIII',
-    description: 'Classic FireflyIII blue theme',
+    name: 'Firefly III',
+    description: 'Classic Firefly III blue theme',
     light: {
       dark: false,
       colors: {

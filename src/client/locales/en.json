@@ -205,14 +205,14 @@
     }
   },
   "settings": {
-    "firefly": "FireflyIII",
+    "firefly": "Firefly III",
     "aiFeatures": "AI Features",
     "aiActive": "Active: {provider}",
     "configurationIssues": "Configuration Issues",
     "signedInAs": "Signed in as",
     "email": "Email",
     "authentication": "Authentication",
-    "fireflyConnection": "FireflyIII Connection",
+    "fireflyConnection": "Firefly III Connection",
     "serverConfigured": "Server Configured",
     "apiUrl": "API URL",
     "apiToken": "API Token",
@@ -235,11 +235,11 @@
     "license": "License",
     "authMethods": {
       "sso": "Single Sign-On",
-      "firefly": "FireflyIII OAuth"
+      "firefly": "Firefly III OAuth"
     }
   },
   "app": {
-    "title": "Firefly-III Toolbox"
+    "title": "Toolbox for Firefly III"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -280,7 +280,7 @@
         "fintsImporter": "Connect directly to your German bank via FinTS/HBCI to import transactions."
       },
       "aiFeatureTag": "AI",
-      "extendYourFirefly": "Extend your FireflyIII with powerful automation tools"
+      "extendYourFirefly": "Extend your Firefly III with powerful automation tools"
     },
     "duplicates": {
       "steps": {
@@ -417,7 +417,7 @@
       "items": "Items",
       "showingFirst10": "Showing first 10 of {total} orders",
       "loadingText": "Fetching Amazon transactions...",
-      "alreadyProcessedHint": "Transactions tagged with 'FFIII Toolbox: Amazon Extender' will be excluded",
+      "alreadyProcessedHint": "Transactions tagged with 'Toolbox for FFIII: Amazon Extender' will be excluded",
       "clickToMatch": "Click 'Match Transactions' to find matches between your Amazon orders and Firefly transactions",
       "matchedOrder": "Matched Order:",
       "orderItems": "Order Items:",
@@ -446,7 +446,7 @@
       "gross": "Gross",
       "fee": "Fee",
       "loadingText": "Fetching PayPal transactions...",
-      "alreadyProcessedHint": "Transactions tagged with 'FFIII Toolbox: PayPal Extender' will be excluded",
+      "alreadyProcessedHint": "Transactions tagged with 'Toolbox for FFIII: PayPal Extender' will be excluded",
       "transactionCode": "Transaction Code",
       "matchedPaypal": "Matched PayPal",
       "paypalDetails": "PayPal Details",
@@ -507,7 +507,7 @@
       "successfullyImported": "Successfully imported {count} transaction(s)!",
       "failedToImport": "Failed to import transactions",
       "commaSeparator": ", ",
-      "defaultImportTag": "FFIII Toolbox: Import on {date} {'@'} {time}"
+      "defaultImportTag": "Toolbox for FFIII: Import on {date} {'@'} {time}"
     },
     "fints": {
       "steps": {
@@ -542,7 +542,7 @@
       "imported": "{count} imported",
       "failed": "{count} failed",
       "andMoreErrors": "... and {count} more errors",
-      "defaultImportTag": "FFIII Toolbox: FinTS Import on {date} {'@'} {time}",
+      "defaultImportTag": "Toolbox for FFIII: FinTS Import on {date} {'@'} {time}",
       "connectedAccounts": "Connected - {count} account(s)",
       "columnsConfigured": "{count} columns configured",
       "readyToImportStatus": "{count} ready to import",
@@ -607,7 +607,7 @@
         "userInfoFailed": "Failed to retrieve user information.",
         "invalidState": "Invalid authentication state. Please try again.",
         "oidcNotConfigured": "Single Sign-On is not configured.",
-        "fireflyOAuthNotConfigured": "FireflyIII OAuth is not configured.",
+        "fireflyOAuthNotConfigured": "Firefly III OAuth is not configured.",
         "accessDenied": "Access was denied by the authentication provider.",
         "authenticationError": "Authentication error: {code}"
       }
@@ -647,11 +647,11 @@
       "stepXOfY": "Step {current} of {total}"
     },
     "appHeader": {
-      "connectedToFirefly": "Connected to FireflyIII",
-      "disconnectedFromFirefly": "Disconnected from FireflyIII",
+      "connectedToFirefly": "Connected to Firefly III",
+      "disconnectedFromFirefly": "Disconnected from Firefly III",
       "lightMode": "Light mode",
       "darkMode": "Dark mode",
-      "openFirefly": "Open FireflyIII"
+      "openFirefly": "Open Firefly III"
     },
     "converter": {
       "addBlock": "Add Block",
@@ -757,7 +757,7 @@
     "requiresConfiguration": {
       "fints": "FinTS Product ID required",
       "ai": "Configure AI first",
-      "firefly": "Connect to FireflyIII first"
+      "firefly": "Connect to Firefly III first"
     }
   }
 }

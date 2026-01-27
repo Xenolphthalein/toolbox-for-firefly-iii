@@ -188,7 +188,7 @@ function detectAuthMethod(enabledMethods: AuthMethod[]): AuthMethod {
   if (getOptionalEnvVar('AUTH_OIDC_ISSUER_URL') && getOptionalEnvVar('AUTH_OIDC_CLIENT_ID')) {
     return 'oidc';
   }
-  // FireflyIII OAuth - secret is optional (public clients don't need it)
+  // Firefly III OAuth - secret is optional (public clients don't need it)
   if (getOptionalEnvVar('AUTH_FIREFLY_CLIENT_ID')) {
     return 'firefly';
   }
@@ -339,7 +339,7 @@ export function isOIDCConfigured(): boolean {
 }
 
 export function isFireflyOAuthConfigured(): boolean {
-  // FireflyIII OAuth can work with public clients (no secret) or confidential clients (with secret)
+  // Firefly III OAuth can work with public clients (no secret) or confidential clients (with secret)
   return Boolean(config.firefly.apiUrl && config.auth.fireflyOAuth.clientId);
 }
 

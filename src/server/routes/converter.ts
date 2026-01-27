@@ -85,11 +85,11 @@ function buildTransactionData(tx: ImportTransaction, tags?: string[]): Record<st
   return data;
 }
 
-// Middleware to check FireflyIII configuration (optional for converter)
+// Middleware to check Firefly III configuration (optional for converter)
 const requireFirefly = (_req: Request, _res: Response, next: () => void) => {
   if (!isFireflyConfigured()) {
     throw badRequest(
-      'FireflyIII is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
+      'Firefly III is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
     );
   }
   next();
@@ -97,9 +97,9 @@ const requireFirefly = (_req: Request, _res: Response, next: () => void) => {
 
 /**
  * POST /api/converter/import
- * Import converted transactions directly into FireflyIII
+ * Import converted transactions directly into Firefly III
  * Body: { transactions: FireflyTransactionSplit[], options?: ImportOptions }
- * Rate limited to prevent excessive API calls to FireflyIII
+ * Rate limited to prevent excessive API calls to Firefly III
  */
 router.post(
   '/import',
@@ -181,7 +181,7 @@ router.post(
  * POST /api/converter/stream-import
  * Import converted transactions with SSE progress streaming
  * Body: { transactions: FireflyTransactionSplit[], options?: ImportOptions }
- * Rate limited to prevent excessive API calls to FireflyIII
+ * Rate limited to prevent excessive API calls to Firefly III
  */
 router.post(
   '/stream-import',

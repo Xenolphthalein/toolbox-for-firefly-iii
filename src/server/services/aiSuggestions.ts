@@ -17,7 +17,7 @@ import type {
 const logger = createLogger('AIService');
 
 // Tag applied to transactions processed by the Tag Suggester
-export const TAGGER_TAG = 'FFIII Toolbox: Suggested Tags';
+export const TAGGER_TAG = 'Toolbox for FFIII: Suggested Tags';
 
 export interface ProgressCallback {
   onProgress: (current: number, total: number) => void;
@@ -97,7 +97,7 @@ export class AISuggestionService {
     logger.debug(`Available categories: ${categoryNames.length}`);
 
     if (categoryNames.length === 0) {
-      throw new Error('No categories found in FireflyIII. Please create some categories first.');
+      throw new Error('No categories found in Firefly III. Please create some categories first.');
     }
 
     for (let i = 0; i < toProcess.length; i++) {
@@ -195,7 +195,7 @@ export class AISuggestionService {
     logger.debug(`Available tags: ${tagNames.length}`);
 
     if (tagNames.length === 0) {
-      throw new Error('No tags found in FireflyIII. Please create some tags first.');
+      throw new Error('No tags found in Firefly III. Please create some tags first.');
     }
 
     for (let i = 0; i < toProcess.length; i++) {

@@ -51,7 +51,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of Firefly-III Toolbox are you using?
+      description: What version of Toolbox for Firefly III are you using?
       placeholder: e.g., 1.0.0 or commit hash
     validations:
       required: false
@@ -60,7 +60,7 @@ body:
     id: deployment
     attributes:
       label: Deployment Method
-      description: How are you running Firefly-III Toolbox?
+      description: How are you running Toolbox for Firefly III?
       options:
         - Docker
         - Docker Compose
@@ -74,11 +74,11 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Any relevant environment details (browser, OS, FireflyIII version, etc.)
+      description: Any relevant environment details (browser, OS, Firefly III version, etc.)
       placeholder: |
         - Browser: Chrome 120
         - OS: Windows 11
-        - FireflyIII: v6.1.0
+        - Firefly III: v6.1.0
     validations:
       required: false
 

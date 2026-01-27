@@ -12,7 +12,7 @@ import type {
 const logger = createLogger('PayPalExtender');
 
 // Tag applied to transactions processed by the PayPal Extender
-export const PAYPAL_EXTENDER_TAG = 'FFIII Toolbox: PayPal Extender';
+export const PAYPAL_EXTENDER_TAG = 'Toolbox for FFIII: PayPal Extender';
 
 export interface StreamEvent<T = unknown> {
   type: 'progress' | 'result' | 'error' | 'complete';
@@ -362,7 +362,7 @@ export class PayPalExtender {
       logger.debug(`Using ${this.cachedFireflyTransactions.length} cached Firefly transactions`);
       transactions = this.cachedFireflyTransactions;
     } else {
-      logger.debug('Fetching transactions from FireflyIII');
+      logger.debug('Fetching transactions from Firefly III');
       transactions = await this.fireflyApi.getAllTransactions(startDate, endDate, 'withdrawal');
       logger.info(`Fetched ${transactions.length} total transactions`);
       // Cache for potential reuse

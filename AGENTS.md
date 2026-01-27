@@ -1,8 +1,8 @@
-# AGENTS.md — Firefly-III Toolbox Development Guide
+# AGENTS.md — Toolbox for Firefly III Development Guide
 
 ## Project Overview
 
-Firefly-III Toolbox is a web application that extends FireflyIII (personal finance manager) with automation tools. It provides features like duplicate detection, AI-powered category/tag suggestions, subscription pattern detection, and Amazon/PayPal transaction matching.
+Toolbox for Firefly III is a web application that extends Firefly III (personal finance manager) with automation tools. It provides features like duplicate detection, AI-powered category/tag suggestions, subscription pattern detection, and Amazon/PayPal transaction matching.
 
 ---
 
@@ -219,8 +219,8 @@ const current = getLocale(); // 'en' | 'de'
 Configuration via environment variables (see `.env.example` for full details):
 
 ### Core Settings
-- `FIREFLY_API_URL` - FireflyIII instance URL (required)
-- `FIREFLY_API_TOKEN` - FireflyIII personal access token (required)
+- `FIREFLY_API_URL` - Firefly III instance URL (required)
+- `FIREFLY_API_TOKEN` - Firefly III personal access token (required)
 - `PORT` - Server port (default: `3000`)
 - `APP_URL` - Public URL of this application for OAuth callbacks (default: `http://localhost:3000`)
 - `NODE_ENV` - Environment: `development` or `production`
@@ -232,7 +232,7 @@ Configuration via environment variables (see `.env.example` for full details):
 - `AUTH_ALLOW_INSECURE` - Set to `true` to allow running without auth in production (not recommended)
 - `AUTH_BASIC_USERNAME` / `AUTH_BASIC_PASSWORD` - Basic auth credentials
 - `AUTH_OIDC_ISSUER_URL` / `AUTH_OIDC_CLIENT_ID` / `AUTH_OIDC_CLIENT_SECRET` / `AUTH_OIDC_SCOPES` - OIDC settings
-- `AUTH_FIREFLY_CLIENT_ID` / `AUTH_FIREFLY_CLIENT_SECRET` - FireflyIII OAuth settings
+- `AUTH_FIREFLY_CLIENT_ID` / `AUTH_FIREFLY_CLIENT_SECRET` - Firefly III OAuth settings
 
 ### AI Settings
 - `AI_PROVIDER` - AI provider: `openai` or `ollama` (auto-detects)

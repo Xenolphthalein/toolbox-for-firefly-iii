@@ -56,11 +56,11 @@ async function clearClient(sessionId: string): Promise<void> {
   await dialogStateStore.delete(sessionId);
 }
 
-// Middleware to check FireflyIII and FinTS configuration
+// Middleware to check Firefly III and FinTS configuration
 router.use((_req: Request, _res: Response, next) => {
   if (!isFireflyConfigured()) {
     throw badRequest(
-      'FireflyIII is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
+      'Firefly III is not configured. Please set FIREFLY_API_URL and FIREFLY_API_TOKEN.'
     );
   }
   if (!isFinTSConfigured()) {
@@ -352,7 +352,7 @@ router.post(
               destination_name: tx.destination_name,
               notes: tx.notes,
               external_id: tx.external_id,
-              tags: ['FFIII Toolbox: FinTS Importer'],
+              tags: ['Toolbox for FFIII: FinTS Importer'],
             },
           ],
         });

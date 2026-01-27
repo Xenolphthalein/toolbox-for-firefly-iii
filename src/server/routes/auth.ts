@@ -147,7 +147,7 @@ router.get('/providers', async (_req: Request, res: Response) => {
   if (isFireflyOAuthConfigured()) {
     providers.push({
       method: 'firefly',
-      name: 'Login with FireflyIII',
+      name: 'Login with Firefly III',
       authUrl: '/api/auth/firefly/login',
     });
   }
@@ -450,7 +450,7 @@ router.get('/firefly/callback', async (req: Request, res: Response) => {
       id: userData.data?.id || 'firefly-user',
       username: fireflyUser?.email || 'firefly-user',
       email: fireflyUser?.email,
-      displayName: fireflyUser?.email || 'FireflyIII User',
+      displayName: fireflyUser?.email || 'Firefly III User',
       authMethod: 'firefly',
     };
 
