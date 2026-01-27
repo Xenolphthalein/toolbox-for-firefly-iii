@@ -6,7 +6,7 @@
 
 # Firefly-III Toolbox
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-available-2496ED?logo=docker&logoColor=white)](https://github.com/xenolphthalein/firefly-toolbox/pkgs/container/firefly-toolbox)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
