@@ -72,7 +72,7 @@ Recommends tags for transactions based on description analysis and your existing
 
 ### Amazon Order Extender
 
-Enriches transactions with Amazon order details (item names, IDs). Requires JSON export from the [Amazon Order History Exporter](https://github.com/xenolphthalein/amazon-order-history-exporter) extension. Matches by amount and date.
+Enriches transactions with Amazon order details (item names, IDs). Requires JSON export from the [Order History Exporter for Amazon](https://github.com/xenolphthalein/order-history-exporter-for-amazon) extension. Matches by amount and date.
 
 ### PayPal Extender
 
