@@ -61,13 +61,13 @@
         <v-list-item
           prepend-icon="mdi-github"
           :title="t('common.buttons.viewOnGitHub')"
-          href="https://github.com/xenolphthalein/firefly-toolbox"
+          href="https://github.com/xenolphthalein/toolbox-for-firefly-iii"
           target="_blank"
         />
         <v-list-item
           prepend-icon="mdi-bug-outline"
           :title="t('common.buttons.foundBug')"
-          href="https://github.com/xenolphthalein/firefly-toolbox/issues"
+          href="https://github.com/xenolphthalein/toolbox-for-firefly-iii/issues"
           target="_blank"
         />
         <v-divider v-if="authStore.isAuthenticated" />
