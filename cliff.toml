@@ -69,4 +69,4 @@ link_parsers = [
 
 [remote.github]
 owner = "Xenolphthalein"
-repo = "firefly-toolbox"
+repo = "toolbox-for-firefly-iii"

@@ -7,7 +7,7 @@
 # Toolbox for Firefly III
 
 [![License: Unlicense](https://img.shields.io/badge/License-Unlicense-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-available-2496ED?logo=docker&logoColor=white)](https://github.com/xenolphthalein/firefly-toolbox/pkgs/container/firefly-toolbox)
+[![Docker](https://img.shields.io/badge/Docker-available-2496ED?logo=docker&logoColor=white)](https://github.com/xenolphthalein/toolbox-for-firefly-iii/pkgs/container/toolbox-for-firefly-iii)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
 
@@ -106,8 +106,8 @@ Requires Node.js 20+.
 
 ```bash
 # Clone the repository
-git clone https://github.com/xenolphthalein/firefly-toolbox.git
-cd firefly-toolbox
+git clone https://github.com/xenolphthalein/toolbox-for-firefly-iii.git
+cd toolbox-for-firefly-iii
 
 # Install dependencies
 npm install

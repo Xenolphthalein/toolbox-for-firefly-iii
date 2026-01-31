@@ -328,11 +328,11 @@
             <div class="d-flex align-center">
               <v-icon size="18" class="mr-2 text-medium-emphasis">mdi-github</v-icon>
               <a
-                href="https://github.com/xenolphthalein/firefly-toolbox"
+                href="https://github.com/xenolphthalein/toolbox-for-firefly-iii"
                 target="_blank"
                 class="text-primary text-body-2"
               >
-                github.com/xenolphthalein/firefly-toolbox
+                github.com/xenolphthalein/toolbox-for-firefly-iii
               </a>
             </div>
           </div>

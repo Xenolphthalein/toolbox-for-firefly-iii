@@ -8,7 +8,7 @@ export type MessageSchema = typeof en;
 export const SUPPORTED_LOCALES = ['en', 'de'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
-const STORAGE_KEY = 'firefly-toolbox-settings';
+const STORAGE_KEY = 'toolbox-for-firefly-iii-settings';
 
 /**
  * Get the initial locale based on priority:
