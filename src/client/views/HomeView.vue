@@ -25,9 +25,15 @@
             {{ appStore.isConnected ? 'mdi-check-circle' : 'mdi-close-circle' }}
           </v-icon>
           <div class="flex-grow-1">
-            <div class="text-caption text-uppercase font-weight-medium">{{ t('settings.firefly') }}</div>
+            <div class="text-caption text-uppercase font-weight-medium">
+              {{ t('settings.firefly') }}
+            </div>
             <div class="text-body-1 font-weight-bold">
-              {{ appStore.isConnected ? t('common.status.connected') : t('common.status.disconnected') }}
+              {{
+                appStore.isConnected
+                  ? t('common.status.connected')
+                  : t('common.status.disconnected')
+              }}
             </div>
           </div>
           <v-btn
@@ -48,7 +54,9 @@
             {{ appStore.hasAI ? 'mdi-robot' : 'mdi-robot-off' }}
           </v-icon>
           <div>
-            <div class="text-caption text-uppercase font-weight-medium">{{ t('settings.aiFeatures') }}</div>
+            <div class="text-caption text-uppercase font-weight-medium">
+              {{ t('settings.aiFeatures') }}
+            </div>
             <div class="text-body-1 font-weight-bold">
               {{ appStore.hasAI ? t('common.status.available') : t('common.status.notConfigured') }}
             </div>
@@ -60,7 +68,9 @@
         <v-card-text class="d-flex align-center pa-4">
           <v-icon size="32" class="mr-3">mdi-tools</v-icon>
           <div>
-            <div class="text-caption text-uppercase font-weight-medium">{{ t('views.home.statusCards.toolsReady') }}</div>
+            <div class="text-caption text-uppercase font-weight-medium">
+              {{ t('views.home.statusCards.toolsReady') }}
+            </div>
             <div class="text-body-1 font-weight-bold">
               {{ availableTools.length }} / {{ tools.length }}
             </div>

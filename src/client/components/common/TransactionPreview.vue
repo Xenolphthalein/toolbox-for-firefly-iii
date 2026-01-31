@@ -27,7 +27,9 @@
       >
         <v-icon size="48" class="mb-2">mdi-file-document-outline</v-icon>
         <span class="text-body-1">{{ t('components.transactionPreview.noTransactions') }}</span>
-        <span class="text-body-2 mt-1">{{ t('components.transactionPreview.selectDateRange') }}</span>
+        <span class="text-body-2 mt-1">{{
+          t('components.transactionPreview.selectDateRange')
+        }}</span>
       </div>
 
       <!-- Transaction Table -->
@@ -76,7 +78,9 @@
             <!-- Loading more indicator -->
             <div v-if="loadingMore" class="d-flex align-center justify-center py-4">
               <v-progress-circular indeterminate size="20" class="mr-2" />
-              <span class="text-body-2 text-medium-emphasis">{{ t('components.transactionPreview.loadingMore') }}</span>
+              <span class="text-body-2 text-medium-emphasis">{{
+                t('components.transactionPreview.loadingMore')
+              }}</span>
             </div>
           </div>
         </div>

@@ -105,13 +105,18 @@
                   </v-row>
                   <div v-if="converter.parsedCSV.value" class="mt-3">
                     <div class="text-caption text-medium-emphasis">
-                      <strong>{{ converter.parsedCSV.value.headers.length }}</strong> {{ t('views.converter.columnsDetected') }}
+                      <strong>{{ converter.parsedCSV.value.headers.length }}</strong>
+                      {{ t('views.converter.columnsDetected') }}
                     </div>
                     <div
                       class="text-caption text-truncate"
-                      :title="converter.parsedCSV.value.headers.join(t('views.converter.commaSeparator'))"
+                      :title="
+                        converter.parsedCSV.value.headers.join(t('views.converter.commaSeparator'))
+                      "
                     >
-                      {{ converter.parsedCSV.value.headers.join(t('views.converter.commaSeparator')) }}
+                      {{
+                        converter.parsedCSV.value.headers.join(t('views.converter.commaSeparator'))
+                      }}
                     </div>
                   </div>
                 </v-card-text>
@@ -133,7 +138,9 @@
                 variant="tonal"
               >
                 <v-icon start size="small">mdi-table-row</v-icon>
-                {{ t('views.converter.rowsCount', { count: converter.parsedCSV.value.rows.length }) }}
+                {{
+                  t('views.converter.rowsCount', { count: converter.parsedCSV.value.rows.length })
+                }}
               </v-chip>
             </v-card-title>
             <v-card-text>
@@ -169,7 +176,11 @@
                   v-if="converter.parsedCSV.value.rows.length > 10"
                   class="text-center text-caption text-medium-emphasis pt-3"
                 >
-                  {{ t('views.converter.showingFirstRows', { count: converter.parsedCSV.value.rows.length }) }}
+                  {{
+                    t('views.converter.showingFirstRows', {
+                      count: converter.parsedCSV.value.rows.length,
+                    })
+                  }}
                 </div>
               </template>
             </v-card-text>
@@ -185,7 +196,9 @@
             <div class="d-flex align-center ga-3">
               <div class="d-flex align-center">
                 <v-icon class="mr-2">mdi-swap-horizontal</v-icon>
-                <span class="text-subtitle-1 font-weight-medium">{{ t('common.labels.columnMapping') }}</span>
+                <span class="text-subtitle-1 font-weight-medium">{{
+                  t('common.labels.columnMapping')
+                }}</span>
               </div>
               <v-menu>
                 <template #activator="{ props: menuProps }">
@@ -219,7 +232,9 @@
             <div class="d-flex align-center ga-2">
               <v-btn icon variant="text" size="small" color="info" @click="showHelpDialog = true">
                 <v-icon>mdi-help-circle-outline</v-icon>
-                <v-tooltip activator="parent" location="bottom">{{ t('common.buttons.howToUse') }}</v-tooltip>
+                <v-tooltip activator="parent" location="bottom">{{
+                  t('common.buttons.howToUse')
+                }}</v-tooltip>
               </v-btn>
               <v-btn
                 variant="tonal"
@@ -288,7 +303,9 @@
                   </v-list-item-subtitle>
                 </v-list-item>
                 <v-list-item prepend-icon="mdi-numeric-2-circle">
-                  <v-list-item-title>{{ t('common.help.addTransformationBlocks') }}</v-list-item-title>
+                  <v-list-item-title>{{
+                    t('common.help.addTransformationBlocks')
+                  }}</v-list-item-title>
                   <v-list-item-subtitle>
                     {{ t('common.help.addTransformationBlocksDesc') }}
                   </v-list-item-subtitle>
@@ -309,7 +326,9 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn color="primary" variant="text" @click="showHelpDialog = false"> {{ t('common.buttons.gotIt') }} </v-btn>
+              <v-btn color="primary" variant="text" @click="showHelpDialog = false">
+                {{ t('common.buttons.gotIt') }}
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -339,11 +358,19 @@
               <div class="d-flex align-center ga-4 mb-4 flex-shrink-0">
                 <v-chip color="primary" variant="tonal">
                   <v-icon start>mdi-table-row</v-icon>
-                  {{ t('views.converter.inputRows', { count: converter.parsedCSV.value?.rows.length || 0 }) }}
+                  {{
+                    t('views.converter.inputRows', {
+                      count: converter.parsedCSV.value?.rows.length || 0,
+                    })
+                  }}
                 </v-chip>
                 <v-chip v-if="converter.preview.value?.removedRows" color="warning" variant="tonal">
                   <v-icon start>mdi-table-row-remove</v-icon>
-                  {{ t('common.labels.countRowsRemoved', { count: converter.preview.value.removedRows }) }}
+                  {{
+                    t('common.labels.countRowsRemoved', {
+                      count: converter.preview.value.removedRows,
+                    })
+                  }}
                 </v-chip>
                 <v-chip color="success" variant="tonal">
                   <v-icon start>mdi-table-column</v-icon>
@@ -359,7 +386,11 @@
                 density="compact"
                 class="mb-4 flex-shrink-0"
               >
-                <strong>{{ t('common.labels.countErrorsDetected', { count: converter.preview.value.errors.length }) }}</strong>
+                <strong>{{
+                  t('common.labels.countErrorsDetected', {
+                    count: converter.preview.value.errors.length,
+                  })
+                }}</strong>
                 <ul class="mt-2 mb-0">
                   <li v-for="(error, idx) in converter.preview.value.errors.slice(0, 5)" :key="idx">
                     {{ t('common.labels.rowError', { row: error.row, message: error.message }) }}
@@ -520,7 +551,11 @@
                     density="compact"
                     class="mb-4"
                   >
-                    {{ t('common.labels.readyToImportCount', { count: importValidation.summary.validRows }) }}
+                    {{
+                      t('common.labels.readyToImportCount', {
+                        count: importValidation.summary.validRows,
+                      })
+                    }}
                   </v-alert>
 
                   <v-alert
@@ -530,7 +565,9 @@
                     density="compact"
                     class="mb-4"
                   >
-                    <div class="font-weight-medium mb-1">{{ t('views.converter.cannotImport') }}</div>
+                    <div class="font-weight-medium mb-1">
+                      {{ t('views.converter.cannotImport') }}
+                    </div>
                     <ul class="mb-0 pl-4">
                       <li
                         v-for="(err, idx) in importValidation.errors.slice(0, 5)"
@@ -575,7 +612,11 @@
                       variant="tonal"
                     >
                       <v-icon start size="small">mdi-check</v-icon>
-                      {{ t('views.converter.validRows', { count: importValidation.summary.validRows }) }}
+                      {{
+                        t('views.converter.validRows', {
+                          count: importValidation.summary.validRows,
+                        })
+                      }}
                     </v-chip>
                     <v-chip
                       v-if="importValidation.summary.rowsWithErrors"
@@ -584,7 +625,11 @@
                       variant="tonal"
                     >
                       <v-icon start size="small">mdi-alert</v-icon>
-                      {{ t('views.converter.rowsWithErrors', { count: importValidation.summary.rowsWithErrors }) }}
+                      {{
+                        t('views.converter.rowsWithErrors', {
+                          count: importValidation.summary.rowsWithErrors,
+                        })
+                      }}
                     </v-chip>
                     <v-chip
                       v-if="importValidation.summary.rowsRemoved"
@@ -593,7 +638,11 @@
                       variant="tonal"
                     >
                       <v-icon start size="small">mdi-minus</v-icon>
-                      {{ t('common.labels.countRowsRemoved', { count: importValidation.summary.rowsRemoved }) }}
+                      {{
+                        t('common.labels.countRowsRemoved', {
+                          count: importValidation.summary.rowsRemoved,
+                        })
+                      }}
                     </v-chip>
                   </div>
                 </v-card-text>
@@ -627,7 +676,11 @@
         </v-card-title>
         <v-card-text>
           <p class="mb-4">
-            {{ t('views.converter.confirmImportText', { count: importValidation?.summary.validRows || 0 }) }}
+            {{
+              t('views.converter.confirmImportText', {
+                count: importValidation?.summary.validRows || 0,
+              })
+            }}
           </p>
 
           <!-- Import settings summary -->
@@ -671,7 +724,12 @@
               class="mb-2"
             />
             <div class="text-caption text-center text-medium-emphasis">
-              {{ t('views.converter.progressText', { current: converter.importProgress.value.current, total: converter.importProgress.value.total }) }}
+              {{
+                t('views.converter.progressText', {
+                  current: converter.importProgress.value.current,
+                  total: converter.importProgress.value.total,
+                })
+              }}
             </div>
           </div>
 
@@ -681,7 +739,8 @@
             variant="tonal"
             density="compact"
           >
-            <strong>{{ t('common.labels.warning') }}:</strong> {{ t('views.converter.duplicateWarning') }}
+            <strong>{{ t('common.labels.warning') }}:</strong>
+            {{ t('views.converter.duplicateWarning') }}
           </v-alert>
         </v-card-text>
         <v-card-actions>
@@ -904,7 +963,10 @@ const statusMessage = computed(() => {
   if (currentStep.value === 1) {
     if (converter.processing.value) return t('common.status.parsing');
     if (!converter.parsedCSV.value) return '';
-    return t('views.converter.rowsColumns', { rows: converter.parsedCSV.value.rows.length, columns: converter.parsedCSV.value.headers.length });
+    return t('views.converter.rowsColumns', {
+      rows: converter.parsedCSV.value.rows.length,
+      columns: converter.parsedCSV.value.headers.length,
+    });
   }
   return '';
 });
@@ -1104,7 +1166,9 @@ async function onImportToFirefly() {
     showImportResultsDialog.value = true;
 
     if (importResults.value.failed === 0) {
-      successMessage.value = t('views.converter.successfullyImported', { count: importResults.value.successful });
+      successMessage.value = t('views.converter.successfullyImported', {
+        count: importResults.value.successful,
+      });
       showSuccess.value = true;
     }
   } catch (e) {

@@ -104,7 +104,11 @@
                       <div class="text-caption text-medium-emphasis">
                         {{ formatCurrency(pattern.averageAmount) }}
                         • {{ formatPatternType(pattern.pattern) }} •
-                        {{ t('views.subscriptions.occurrences', { count: pattern.transactions.length }) }}
+                        {{
+                          t('views.subscriptions.occurrences', {
+                            count: pattern.transactions.length,
+                          })
+                        }}
                       </div>
                     </div>
                   </div>
@@ -198,7 +202,9 @@
             <v-text-field
               v-model="createData.name"
               :label="t('common.labels.name')"
-              :rules="[(v) => !!v || t('views.subscriptions.createSubscriptionDialog.nameRequired')]"
+              :rules="[
+                (v) => !!v || t('views.subscriptions.createSubscriptionDialog.nameRequired'),
+              ]"
               class="mb-4"
             />
 
@@ -208,7 +214,11 @@
                   v-model="createData.amountMin"
                   :label="t('common.labels.minimumAmount')"
                   type="number"
-                  :rules="[(v) => !!v || t('views.subscriptions.createSubscriptionDialog.minimumAmountRequired')]"
+                  :rules="[
+                    (v) =>
+                      !!v ||
+                      t('views.subscriptions.createSubscriptionDialog.minimumAmountRequired'),
+                  ]"
                 />
               </v-col>
               <v-col cols="6">
@@ -216,7 +226,11 @@
                   v-model="createData.amountMax"
                   :label="t('common.labels.maximumAmount')"
                   type="number"
-                  :rules="[(v) => !!v || t('views.subscriptions.createSubscriptionDialog.maximumAmountRequired')]"
+                  :rules="[
+                    (v) =>
+                      !!v ||
+                      t('views.subscriptions.createSubscriptionDialog.maximumAmountRequired'),
+                  ]"
                 />
               </v-col>
             </v-row>
@@ -247,17 +261,28 @@
               v-model="createData.date"
               :label="t('views.subscriptions.createSubscriptionDialog.expectedDateHint')"
               type="date"
-              :rules="[(v) => !!v || t('views.subscriptions.createSubscriptionDialog.dateRequired')]"
+              :rules="[
+                (v) => !!v || t('views.subscriptions.createSubscriptionDialog.dateRequired'),
+              ]"
               class="mt-4"
             />
 
-            <v-textarea v-model="createData.notes" :label="t('views.subscriptions.createSubscriptionDialog.notesOptional')" rows="2" class="mt-4" />
+            <v-textarea
+              v-model="createData.notes"
+              :label="t('views.subscriptions.createSubscriptionDialog.notesOptional')"
+              rows="2"
+              class="mt-4"
+            />
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="createDialog = false">{{ t('common.buttons.cancel') }}</v-btn>
-          <v-btn color="primary" :loading="creating" @click="createSubscription">{{ t('common.buttons.createSubscription') }}</v-btn>
+          <v-btn variant="text" @click="createDialog = false">{{
+            t('common.buttons.cancel')
+          }}</v-btn>
+          <v-btn color="primary" :loading="creating" @click="createSubscription">{{
+            t('common.buttons.createSubscription')
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -306,7 +331,10 @@ const { showSnackbar } = useSnackbar();
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToAnalyze') },
-  { title: t('common.steps.findReview'), subtitle: t('views.subscriptions.steps.findReview.subtitle') },
+  {
+    title: t('common.steps.findReview'),
+    subtitle: t('views.subscriptions.steps.findReview.subtitle'),
+  },
 ]);
 
 // Step 1: Date range state
@@ -457,7 +485,10 @@ function handleStreamEvent(
         progressData.current || 0,
         progressData.total || 0,
         progressData.message ||
-          t('views.subscriptions.analyzingPattern', { current: progressData.current, total: progressData.total })
+          t('views.subscriptions.analyzingPattern', {
+            current: progressData.current,
+            total: progressData.total,
+          })
       );
       break;
     }
@@ -507,10 +538,16 @@ async function findPatterns() {
         'warning'
       );
     } else if (patterns.value.length > 0) {
-      showSnackbar(t('views.subscriptions.foundPatterns', { count: patterns.value.length }), 'info');
+      showSnackbar(
+        t('views.subscriptions.foundPatterns', { count: patterns.value.length }),
+        'info'
+      );
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.subscriptions.failedToFindPatterns'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.subscriptions.failedToFindPatterns'),
+      'error'
+    );
   } finally {
     loading.value = false;
   }
@@ -526,8 +563,16 @@ function getSubscriptionBreakdownItems(
   breakdown: SubscriptionConfidenceBreakdown
 ): BreakdownItem[] {
   const items: BreakdownItem[] = [
-    { label: t('common.labels.intervalConsistency'), value: breakdown.intervalConsistency, max: 0.5 },
-    { label: t('common.labels.descriptionMatch'), value: breakdown.descriptionSimilarity, max: 0.3 },
+    {
+      label: t('common.labels.intervalConsistency'),
+      value: breakdown.intervalConsistency,
+      max: 0.5,
+    },
+    {
+      label: t('common.labels.descriptionMatch'),
+      value: breakdown.descriptionSimilarity,
+      max: 0.3,
+    },
     { label: t('common.labels.occurrenceCount'), value: breakdown.occurrenceCount, max: 0.15 },
     { label: t('common.labels.amountConsistency'), value: breakdown.amountConsistency, max: 0.05 },
   ];
@@ -617,7 +662,10 @@ function formatPatternType(pattern: SubscriptionPattern['pattern']): string {
     yearly: t('views.subscriptions.units.years'),
   };
 
-  return t('views.subscriptions.everyInterval', { interval: interval + 1, unit: unitLabels[type] || type });
+  return t('views.subscriptions.everyInterval', {
+    interval: interval + 1,
+    unit: unitLabels[type] || type,
+  });
 }
 
 function openCreateDialog(pattern: SubscriptionPattern) {
@@ -711,7 +759,10 @@ async function createSubscription() {
     // Remove the pattern from the list
     patterns.value = patterns.value.filter((p) => p.id !== selectedPattern.value?.id);
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.subscriptions.failedToCreateSubscription'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.subscriptions.failedToCreateSubscription'),
+      'error'
+    );
   } finally {
     creating.value = false;
   }

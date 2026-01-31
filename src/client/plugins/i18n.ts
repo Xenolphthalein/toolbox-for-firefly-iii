@@ -32,7 +32,8 @@ function getInitialLocale(): SupportedLocale {
   }
 
   // 2. Check environment variable (try generic first, fallback to VITE_ prefixed)
-  const envLocale = (typeof DEFAULT_LOCALE !== 'undefined' ? DEFAULT_LOCALE : import.meta.env.VITE_DEFAULT_LOCALE);
+  const envLocale =
+    typeof DEFAULT_LOCALE !== 'undefined' ? DEFAULT_LOCALE : import.meta.env.VITE_DEFAULT_LOCALE;
   if (envLocale && SUPPORTED_LOCALES.includes(envLocale as SupportedLocale)) {
     return envLocale as SupportedLocale;
   }

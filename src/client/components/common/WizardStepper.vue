@@ -22,7 +22,12 @@
           <div class="d-flex align-center ga-3">
             <div class="d-flex align-center ga-2">
               <span class="text-body-2 text-medium-emphasis">
-                {{ t('components.wizardStepper.stepXOfY', { current: currentStep, total: totalSteps }) }}
+                {{
+                  t('components.wizardStepper.stepXOfY', {
+                    current: currentStep,
+                    total: totalSteps,
+                  })
+                }}
               </span>
               <template v-if="statusMessage">
                 <span class="text-medium-emphasis">•</span>

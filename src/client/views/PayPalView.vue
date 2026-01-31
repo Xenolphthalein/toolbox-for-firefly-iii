@@ -127,8 +127,8 @@
           <template #options>
             <v-checkbox
               v-model="excludeProcessed"
-            :label="t('common.labels.hideAlreadyProcessed')"
-            :hint="t('views.paypal.alreadyProcessedHint')"
+              :label="t('common.labels.hideAlreadyProcessed')"
+              :hint="t('views.paypal.alreadyProcessedHint')"
               persistent-hint
               hide-details="auto"
               density="compact"
@@ -165,12 +165,16 @@
             :stats="[
               {
                 icon: 'mdi-check',
-                label: t('common.labels.countMatches', { count: matchResults.filter((m) => m.matchedPayPalTransaction).length }),
+                label: t('common.labels.countMatches', {
+                  count: matchResults.filter((m) => m.matchedPayPalTransaction).length,
+                }),
                 color: 'success',
               },
               {
                 icon: 'mdi-help',
-                label: t('common.labels.countUnmatched', { count: matchResults.filter((m) => !m.matchedPayPalTransaction).length }),
+                label: t('common.labels.countUnmatched', {
+                  count: matchResults.filter((m) => !m.matchedPayPalTransaction).length,
+                }),
                 color: 'grey',
               },
             ]"
@@ -238,7 +242,9 @@
                           </span>
                         </template>
                         <div class="confidence-breakdown">
-                          <div class="font-weight-bold mb-1">{{ t('common.labels.confidenceBreakdown') }}</div>
+                          <div class="font-weight-bold mb-1">
+                            {{ t('common.labels.confidenceBreakdown') }}
+                          </div>
                           <div
                             v-if="result.confidenceBreakdown.transactionCodeMatch > 0"
                             class="d-flex justify-space-between"
@@ -276,7 +282,9 @@
                             v-if="result.confidenceBreakdown.exactAmountBonus > 0"
                             class="d-flex justify-space-between"
                           >
-                            <span>{{ t('views.paypal.confidenceBreakdown.exactAmountBonus') }}</span>
+                            <span>{{
+                              t('views.paypal.confidenceBreakdown.exactAmountBonus')
+                            }}</span>
                             <span class="ml-3"
                               >+{{
                                 Math.round(result.confidenceBreakdown.exactAmountBonus * 100)
@@ -470,7 +478,10 @@ const { t } = useI18n();
 // Wizard state
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
-  { title: t('views.paypal.steps.uploadActivity.title'), subtitle: t('views.paypal.steps.uploadActivity.subtitle') },
+  {
+    title: t('views.paypal.steps.uploadActivity.title'),
+    subtitle: t('views.paypal.steps.uploadActivity.subtitle'),
+  },
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToMatch') },
   { title: t('common.steps.matchReview'), subtitle: t('common.steps.reviewAndApplyChanges') },
 ]);
@@ -625,10 +636,16 @@ async function uploadTransactions(fileOrFiles: File | File[] | null) {
     });
 
     loadedTransactions.value = response.data.data.transactions;
-    showSnackbar(t('views.paypal.messages.transactionsLoaded', { count: loadedTransactions.value.length }), 'success');
+    showSnackbar(
+      t('views.paypal.messages.transactionsLoaded', { count: loadedTransactions.value.length }),
+      'success'
+    );
   } catch (error) {
     console.error('Upload error:', error);
-    showSnackbar(error instanceof Error ? error.message : t('views.paypal.messages.failedToUpload'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.paypal.messages.failedToUpload'),
+      'error'
+    );
   } finally {
     uploading.value = false;
     uploadFile.value = [];
@@ -686,9 +703,9 @@ function handleStreamEvent(
       progress.update(progressData.current || 0, progressData.total || 0);
       progress.message.value =
         progressData.message ||
-        t('common.messages.matchingTransaction', { 
-          current: progressData.current, 
-          total: progressData.total 
+        t('common.messages.matchingTransaction', {
+          current: progressData.current,
+          total: progressData.total,
         });
       break;
     }
@@ -749,12 +766,18 @@ async function matchTransactions() {
       );
     } else if (matchCount > 0) {
       showSnackbar(
-        t('views.paypal.messages.matchesFound', { matches: matchCount, total: matchResults.value.length }),
+        t('views.paypal.messages.matchesFound', {
+          matches: matchCount,
+          total: matchResults.value.length,
+        }),
         'info'
       );
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('common.errors.failedToMatchTransactions'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('common.errors.failedToMatchTransactions'),
+      'error'
+    );
   } finally {
     matching.value = false;
   }
@@ -791,9 +814,9 @@ async function applySelected() {
 
     showSnackbar(
       result.failed.length > 0
-        ? t('views.paypal.messages.descriptionsUpdatedWithFailed', { 
-            successful: result.successful.length, 
-            failed: result.failed.length 
+        ? t('views.paypal.messages.descriptionsUpdatedWithFailed', {
+            successful: result.successful.length,
+            failed: result.failed.length,
           })
         : t('views.paypal.messages.descriptionsUpdated', { successful: result.successful.length }),
       result.failed.length > 0 ? 'warning' : 'success'
@@ -804,7 +827,10 @@ async function applySelected() {
     );
     selection.clear();
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('common.errors.failedToApplyDescriptions'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('common.errors.failedToApplyDescriptions'),
+      'error'
+    );
   } finally {
     applying.value = false;
   }

@@ -163,12 +163,16 @@
             :stats="[
               {
                 icon: 'mdi-check',
-                label: t('common.labels.countMatches', { count: matchResults.filter((m) => m.matchedOrder).length }),
+                label: t('common.labels.countMatches', {
+                  count: matchResults.filter((m) => m.matchedOrder).length,
+                }),
                 color: 'success',
               },
               {
                 icon: 'mdi-help',
-                label: t('common.labels.countUnmatched', { count: matchResults.filter((m) => !m.matchedOrder).length }),
+                label: t('common.labels.countUnmatched', {
+                  count: matchResults.filter((m) => !m.matchedOrder).length,
+                }),
                 color: 'grey',
               },
             ]"
@@ -356,7 +360,10 @@ const { showSnackbar } = useSnackbar();
 // Wizard state
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
-  { title: t('views.amazon.steps.uploadOrders.title'), subtitle: t('views.amazon.steps.uploadOrders.subtitle') },
+  {
+    title: t('views.amazon.steps.uploadOrders.title'),
+    subtitle: t('views.amazon.steps.uploadOrders.subtitle'),
+  },
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToMatch') },
   { title: t('common.steps.matchReview'), subtitle: t('common.steps.reviewAndApplyChanges') },
 ]);
@@ -515,7 +522,10 @@ async function uploadOrders(fileOrFiles: File | File[] | null) {
     showSnackbar(t('views.amazon.loadedOrders', { count: loadedOrders.value.length }), 'success');
   } catch (error) {
     console.error('Upload error:', error);
-    showSnackbar(error instanceof Error ? error.message : t('views.amazon.failedToUpload'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.amazon.failedToUpload'),
+      'error'
+    );
   } finally {
     uploading.value = false;
     uploadFile.value = [];
@@ -575,7 +585,10 @@ function handleStreamEvent(
         progressData.current || 0,
         progressData.total || 0,
         progressData.message ||
-          t('common.messages.matchingTransaction', { current: progressData.current, total: progressData.total })
+          t('common.messages.matchingTransaction', {
+            current: progressData.current,
+            total: progressData.total,
+          })
       );
       break;
     }
@@ -641,7 +654,10 @@ async function matchTransactions() {
       );
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('common.errors.failedToMatchTransactions'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('common.errors.failedToMatchTransactions'),
+      'error'
+    );
   } finally {
     matching.value = false;
   }
@@ -671,9 +687,9 @@ async function applySelected() {
     const result = response.data.data;
 
     showSnackbar(
-      t('views.amazon.updatedDescriptions', { 
+      t('views.amazon.updatedDescriptions', {
         successful: result.successful.length,
-        failed: result.failed.length > 0 ? result.failed.length : 0
+        failed: result.failed.length > 0 ? result.failed.length : 0,
       }),
       result.failed.length > 0 ? 'warning' : 'success'
     );
@@ -683,7 +699,10 @@ async function applySelected() {
     );
     selection.clear();
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('common.errors.failedToApplyDescriptions'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('common.errors.failedToApplyDescriptions'),
+      'error'
+    );
   } finally {
     applying.value = false;
   }
@@ -696,7 +715,11 @@ function getAmazonBreakdownItems(breakdown: AmazonConfidenceBreakdown): Breakdow
     { label: t('common.labels.amountMatch'), value: breakdown.amountMatch, max: 0.2 },
     { label: t('common.labels.exactAmountBonus'), value: breakdown.exactAmountBonus, max: 0.1 },
     { label: t('common.labels.dateProximity'), value: breakdown.dateProximity, max: 0.1 },
-    { label: t('views.amazon.breakdown.itemTitleMatch'), value: breakdown.itemTitleMatch, max: 0.1 },
+    {
+      label: t('views.amazon.breakdown.itemTitleMatch'),
+      value: breakdown.itemTitleMatch,
+      max: 0.1,
+    },
   ];
 }
 </script>

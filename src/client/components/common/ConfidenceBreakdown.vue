@@ -6,7 +6,9 @@
       </span>
     </template>
     <v-card class="confidence-breakdown-card" rounded="lg" elevation="0" border="0">
-      <v-card-title class="text-subtitle-2 pb-1">{{ t('common.labels.confidenceBreakdown') }}</v-card-title>
+      <v-card-title class="text-subtitle-2 pb-1">{{
+        t('common.labels.confidenceBreakdown')
+      }}</v-card-title>
       <v-card-text class="pt-0">
         <div
           v-for="item in items"

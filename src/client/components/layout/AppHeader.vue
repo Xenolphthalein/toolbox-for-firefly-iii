@@ -35,19 +35,29 @@
           {{ appStore.isConnected ? 'mdi-check-circle' : 'mdi-alert-circle' }}
         </v-icon>
       </template>
-      {{ appStore.isConnected ? t('components.appHeader.connectedToFirefly') : t('components.appHeader.disconnectedFromFirefly') }}
+      {{
+        appStore.isConnected
+          ? t('components.appHeader.connectedToFirefly')
+          : t('components.appHeader.disconnectedFromFirefly')
+      }}
     </v-tooltip>
 
     <v-btn icon variant="text" @click="appStore.toggleDarkMode">
       <v-icon>{{ appStore.darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
       <v-tooltip activator="parent" location="bottom">
-        {{ appStore.darkMode ? t('components.appHeader.lightMode') : t('components.appHeader.darkMode') }}
+        {{
+          appStore.darkMode
+            ? t('components.appHeader.lightMode')
+            : t('components.appHeader.darkMode')
+        }}
       </v-tooltip>
     </v-btn>
 
     <v-btn icon variant="text" :href="fireflyUrl" target="_blank" :disabled="!fireflyUrl">
       <v-icon>mdi-open-in-new</v-icon>
-      <v-tooltip activator="parent" location="bottom"> {{ t('components.appHeader.openFirefly') }} </v-tooltip>
+      <v-tooltip activator="parent" location="bottom">
+        {{ t('components.appHeader.openFirefly') }}
+      </v-tooltip>
     </v-btn>
 
     <v-menu>

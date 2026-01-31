@@ -120,7 +120,10 @@ function getBlockPreview(block: TransformBlock): string {
     case 'numberFormat':
       return `${block.inputDecimalSeparator} → ${t('components.converter.decimalsShort', { decimals: block.decimals })}`;
     case 'conditional':
-      return t('components.converter.conditionalPreview', { then: block.thenBlocks.length, else: block.elseBlocks.length });
+      return t('components.converter.conditionalPreview', {
+        then: block.thenBlocks.length,
+        else: block.elseBlocks.length,
+      });
     case 'switchCase':
       return t('components.converter.switchCasePreview', { cases: block.cases.length });
     case 'removeRow':

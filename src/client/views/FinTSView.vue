@@ -67,7 +67,9 @@
                   >
                     <template #item="{ item, props: itemProps }">
                       <v-list-item v-bind="itemProps">
-                        <v-list-item-subtitle>{{ t('common.labels.blz') }}: {{ item.raw.blz }}</v-list-item-subtitle>
+                        <v-list-item-subtitle
+                          >{{ t('common.labels.blz') }}: {{ item.raw.blz }}</v-list-item-subtitle
+                        >
                       </v-list-item>
                     </template>
                   </v-autocomplete>
@@ -251,7 +253,11 @@
                   v-if="fintsTransactions.length > 10"
                   class="text-center text-caption text-medium-emphasis pt-3"
                 >
-                  {{ t('common.labels.showingFirst10Transactions', { total: fintsTransactions.length }) }}
+                  {{
+                    t('common.labels.showingFirst10Transactions', {
+                      total: fintsTransactions.length,
+                    })
+                  }}
                 </div>
               </template>
             </v-card-text>
@@ -329,7 +335,9 @@
             <div class="d-flex align-center ga-3">
               <div class="d-flex align-center">
                 <v-icon class="mr-2">mdi-swap-horizontal</v-icon>
-                <span class="text-subtitle-1 font-weight-medium">{{ t('common.labels.columnMapping') }}</span>
+                <span class="text-subtitle-1 font-weight-medium">{{
+                  t('common.labels.columnMapping')
+                }}</span>
               </div>
               <v-menu>
                 <template #activator="{ props: menuProps }">
@@ -363,7 +371,9 @@
             <div class="d-flex align-center ga-2">
               <v-btn icon variant="text" size="small" color="info" @click="showHelpDialog = true">
                 <v-icon>mdi-help-circle-outline</v-icon>
-                <v-tooltip activator="parent" location="bottom">{{ t('common.buttons.howToUse') }}</v-tooltip>
+                <v-tooltip activator="parent" location="bottom">{{
+                  t('common.buttons.howToUse')
+                }}</v-tooltip>
               </v-btn>
               <v-btn
                 variant="tonal"
@@ -434,7 +444,9 @@
                   </v-list-item-subtitle>
                 </v-list-item>
                 <v-list-item prepend-icon="mdi-numeric-2-circle">
-                  <v-list-item-title>{{ t('common.help.addTransformationBlocks') }}</v-list-item-title>
+                  <v-list-item-title>{{
+                    t('common.help.addTransformationBlocks')
+                  }}</v-list-item-title>
                   <v-list-item-subtitle>
                     {{ t('common.help.addTransformationBlocksDesc') }}
                   </v-list-item-subtitle>
@@ -456,7 +468,9 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn color="primary" variant="text" @click="showHelpDialog = false"> {{ t('common.buttons.gotIt') }} </v-btn>
+              <v-btn color="primary" variant="text" @click="showHelpDialog = false">
+                {{ t('common.buttons.gotIt') }}
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -490,7 +504,11 @@
                 </v-chip>
                 <v-chip v-if="converter.preview.value?.removedRows" color="warning" variant="tonal">
                   <v-icon start>mdi-table-row-remove</v-icon>
-                  {{ t('common.labels.countRowsRemoved', { count: converter.preview.value.removedRows }) }}
+                  {{
+                    t('common.labels.countRowsRemoved', {
+                      count: converter.preview.value.removedRows,
+                    })
+                  }}
                 </v-chip>
                 <v-chip color="success" variant="tonal">
                   <v-icon start>mdi-table-column</v-icon>
@@ -506,7 +524,11 @@
                 density="compact"
                 class="mb-4 flex-shrink-0"
               >
-                <strong>{{ t('common.labels.countErrorsDetected', { count: converter.preview.value.errors.length }) }}</strong>
+                <strong>{{
+                  t('common.labels.countErrorsDetected', {
+                    count: converter.preview.value.errors.length,
+                  })
+                }}</strong>
                 <ul class="mt-2 mb-0">
                   <li v-for="(error, idx) in converter.preview.value.errors.slice(0, 5)" :key="idx">
                     {{ t('common.labels.rowError', { row: error.row, message: error.message }) }}
@@ -667,7 +689,11 @@
                     density="compact"
                     class="mb-4"
                   >
-                    {{ t('common.labels.readyToImportCount', { count: importValidation.summary.validRows }) }}
+                    {{
+                      t('common.labels.readyToImportCount', {
+                        count: importValidation.summary.validRows,
+                      })
+                    }}
                   </v-alert>
 
                   <v-alert
@@ -677,7 +703,9 @@
                     density="compact"
                     class="mb-4"
                   >
-                    <div class="font-weight-medium mb-1">{{ t('views.fints.cannotImportValidation') }}</div>
+                    <div class="font-weight-medium mb-1">
+                      {{ t('views.fints.cannotImportValidation') }}
+                    </div>
                     <ul class="mb-0 pl-4">
                       <li
                         v-for="(err, idx) in importValidation.errors.slice(0, 5)"
@@ -720,7 +748,8 @@
         <v-card-text>
           <p class="mb-4">
             {{ t('views.fints.thisWillCreate') }}
-            <strong>{{ importValidation?.summary.validRows || 0 }}</strong> {{ t('views.fints.transactionsInFirefly') }}
+            <strong>{{ importValidation?.summary.validRows || 0 }}</strong>
+            {{ t('views.fints.transactionsInFirefly') }}
           </p>
 
           <!-- Import settings summary -->
@@ -764,7 +793,12 @@
               class="mb-2"
             />
             <div class="text-caption text-center text-medium-emphasis">
-              {{ t('views.fints.transactionsProgress', { current: converter.importProgress.value.current, total: converter.importProgress.value.total }) }}
+              {{
+                t('views.fints.transactionsProgress', {
+                  current: converter.importProgress.value.current,
+                  total: converter.importProgress.value.total,
+                })
+              }}
             </div>
           </div>
 
@@ -774,7 +808,8 @@
             variant="tonal"
             density="compact"
           >
-            <strong>{{ t('common.labels.warning') }}:</strong> {{ t('views.converter.duplicateWarning') }}
+            <strong>{{ t('common.labels.warning') }}:</strong>
+            {{ t('views.converter.duplicateWarning') }}
             {{ t('views.fints.duplicateWarningDisabled') }}
           </v-alert>
         </v-card-text>
@@ -875,7 +910,10 @@ const { t } = useI18n();
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   { title: t('common.steps.connectFetch'), subtitle: t('common.steps.loadBankTransactions') },
-  { title: t('views.fints.steps.transform.title'), subtitle: t('views.fints.steps.transform.subtitle') },
+  {
+    title: t('views.fints.steps.transform.title'),
+    subtitle: t('views.fints.steps.transform.subtitle'),
+  },
   { title: t('common.steps.previewExport'), subtitle: t('common.steps.reviewAndImport') },
 ]);
 
@@ -1101,7 +1139,9 @@ const statusMessage = computed(() => {
   }
   if (currentStep.value === 3) {
     if (importValidation.value?.valid) {
-      return t('views.fints.readyToImportStatus', { count: importValidation.value.summary.validRows });
+      return t('views.fints.readyToImportStatus', {
+        count: importValidation.value.summary.validRows,
+      });
     }
   }
   return '';
@@ -1199,7 +1239,10 @@ async function connect() {
       showSnackbar(t('views.fints.messages.connectedSuccessfully'), 'success');
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.fints.messages.failedToConnect'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToConnect'),
+      'error'
+    );
   } finally {
     connecting.value = false;
   }
@@ -1218,7 +1261,10 @@ async function submitTan() {
     tanRequest.value = null;
     showSnackbar(t('views.fints.messages.tanVerified'), 'success');
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.fints.messages.failedToVerifyTan'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToVerifyTan'),
+      'error'
+    );
   } finally {
     submittingTan.value = false;
   }
@@ -1315,12 +1361,18 @@ async function fetchTransactions() {
     fintsTransactions.value = response.data.data.transactions || [];
 
     if (fintsTransactions.value.length > 0) {
-      showSnackbar(t('views.fints.messages.loadedTransactions', { count: fintsTransactions.value.length }), 'success');
+      showSnackbar(
+        t('views.fints.messages.loadedTransactions', { count: fintsTransactions.value.length }),
+        'success'
+      );
     } else {
       showSnackbar(t('views.fints.messages.noTransactionsInRange'), 'info');
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.fints.messages.failedToFetch'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToFetch'),
+      'error'
+    );
   } finally {
     fetching.value = false;
   }
@@ -1526,7 +1578,10 @@ async function onImportToFirefly() {
     showImportResultsDialog.value = true;
   } catch (error) {
     showImportDialog.value = false;
-    showSnackbar(error instanceof Error ? error.message : t('views.fints.messages.failedToFetch'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToFetch'),
+      'error'
+    );
   } finally {
     importing.value = false;
   }

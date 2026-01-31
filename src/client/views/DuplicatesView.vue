@@ -188,11 +188,15 @@
       <v-card>
         <v-card-title>{{ t('views.duplicates.confirmDeletion') }}</v-card-title>
         <v-card-text>
-          {{ t('views.duplicates.confirmDeleteMessage', { count: selection.selected.value.length }) }}
+          {{
+            t('views.duplicates.confirmDeleteMessage', { count: selection.selected.value.length })
+          }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="confirmDialog = false">{{ t('common.buttons.cancel') }}</v-btn>
+          <v-btn variant="text" @click="confirmDialog = false">{{
+            t('common.buttons.cancel')
+          }}</v-btn>
           <v-btn color="error" @click="confirmDelete">{{ t('common.buttons.delete') }}</v-btn>
         </v-card-actions>
       </v-card>
@@ -239,7 +243,10 @@ const { showSnackbar } = useSnackbar();
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToAnalyze') },
-  { title: t('common.steps.findReview'), subtitle: t('views.duplicates.steps.findReview.subtitle') },
+  {
+    title: t('common.steps.findReview'),
+    subtitle: t('views.duplicates.steps.findReview.subtitle'),
+  },
 ]);
 
 // Step 1: Date range state
@@ -449,10 +456,28 @@ function getDuplicateBreakdownItems(breakdown: DuplicateConfidenceBreakdown): Br
     { label: t('views.duplicates.breakdown.dateMatch'), value: breakdown.dateMatch, max: 0.2 },
     { label: t('common.labels.amountMatch'), value: breakdown.amountMatch, max: 0.25 },
     { label: t('common.labels.descriptionMatch'), value: breakdown.descriptionMatch, max: 0.2 },
-    { label: t('views.duplicates.breakdown.sourceAccount'), value: breakdown.sourceAccountMatch, max: 0.15 },
-    { label: t('views.duplicates.breakdown.destinationAccount'), value: breakdown.destinationAccountMatch, max: 0.15 },
-    { label: t('views.duplicates.breakdown.externalId'), value: breakdown.externalIdMatch, max: 0.05, muted: true },
-    { label: t('views.duplicates.breakdown.importHash'), value: breakdown.importHashMatch, max: 0.05, muted: true },
+    {
+      label: t('views.duplicates.breakdown.sourceAccount'),
+      value: breakdown.sourceAccountMatch,
+      max: 0.15,
+    },
+    {
+      label: t('views.duplicates.breakdown.destinationAccount'),
+      value: breakdown.destinationAccountMatch,
+      max: 0.15,
+    },
+    {
+      label: t('views.duplicates.breakdown.externalId'),
+      value: breakdown.externalIdMatch,
+      max: 0.05,
+      muted: true,
+    },
+    {
+      label: t('views.duplicates.breakdown.importHash'),
+      value: breakdown.importHashMatch,
+      max: 0.05,
+      muted: true,
+    },
   ];
 }
 

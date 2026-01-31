@@ -137,7 +137,9 @@
 
                   <v-divider class="my-3" />
 
-                  <div class="text-subtitle-2 text-medium-emphasis mb-2">{{ t('views.tags.suggestedTags') }}</div>
+                  <div class="text-subtitle-2 text-medium-emphasis mb-2">
+                    {{ t('views.tags.suggestedTags') }}
+                  </div>
                   <div class="d-flex flex-wrap ga-2">
                     <v-chip
                       v-for="tag in suggestion.suggestedTags"

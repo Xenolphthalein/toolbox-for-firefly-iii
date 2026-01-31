@@ -8,9 +8,15 @@
             {{ appStore.isConnected ? 'mdi-check-circle' : 'mdi-close-circle' }}
           </v-icon>
           <div>
-            <div class="text-caption text-uppercase font-weight-medium">{{ t('settings.firefly') }}</div>
+            <div class="text-caption text-uppercase font-weight-medium">
+              {{ t('settings.firefly') }}
+            </div>
             <div class="text-body-1 font-weight-bold">
-              {{ appStore.isConnected ? t('common.status.connected') : t('common.status.disconnected') }}
+              {{
+                appStore.isConnected
+                  ? t('common.status.connected')
+                  : t('common.status.disconnected')
+              }}
             </div>
           </div>
         </v-card-text>
@@ -22,9 +28,15 @@
             {{ appStore.hasAI ? 'mdi-robot' : 'mdi-robot-off' }}
           </v-icon>
           <div>
-            <div class="text-caption text-uppercase font-weight-medium">{{ t('settings.aiFeatures') }}</div>
+            <div class="text-caption text-uppercase font-weight-medium">
+              {{ t('settings.aiFeatures') }}
+            </div>
             <div class="text-body-1 font-weight-bold">
-              {{ appStore.hasAI ? t('settings.aiActive', { provider: appStore.aiProvider }) : t('common.status.notConfigured') }}
+              {{
+                appStore.hasAI
+                  ? t('settings.aiActive', { provider: appStore.aiProvider })
+                  : t('common.status.notConfigured')
+              }}
             </div>
           </div>
         </v-card-text>
@@ -70,7 +82,9 @@
               <span class="text-body-2">{{ authStore.user.email }}</span>
             </div>
             <div class="d-flex align-center justify-space-between">
-              <span class="text-body-2 text-medium-emphasis">{{ t('settings.authentication') }}</span>
+              <span class="text-body-2 text-medium-emphasis">{{
+                t('settings.authentication')
+              }}</span>
               <v-chip
                 size="small"
                 variant="tonal"
@@ -97,7 +111,9 @@
             <v-icon size="18">mdi-fire</v-icon>
           </v-avatar>
           {{ t('settings.fireflyConnection') }}
-          <v-chip size="x-small" variant="tonal" class="ml-auto">{{ t('settings.serverConfigured') }}</v-chip>
+          <v-chip size="x-small" variant="tonal" class="ml-auto">{{
+            t('settings.serverConfigured')
+          }}</v-chip>
         </v-card-title>
 
         <v-card-text>
@@ -121,7 +137,11 @@
                 variant="tonal"
                 :color="appStore.isConnected ? 'success' : 'error'"
               >
-                {{ appStore.isConnected ? t('common.status.connected') : t('common.status.disconnected') }}
+                {{
+                  appStore.isConnected
+                    ? t('common.status.connected')
+                    : t('common.status.disconnected')
+                }}
               </v-chip>
             </div>
           </div>
@@ -135,7 +155,9 @@
             <v-icon size="18">mdi-robot</v-icon>
           </v-avatar>
           {{ t('settings.aiIntegration') }}
-          <v-chip size="x-small" variant="tonal" class="ml-auto">{{ t('settings.serverConfigured') }}</v-chip>
+          <v-chip size="x-small" variant="tonal" class="ml-auto">{{
+            t('settings.serverConfigured')
+          }}</v-chip>
         </v-card-title>
 
         <v-card-text>
@@ -149,14 +171,18 @@
             <template v-if="appStore.hasAI">
               <div class="d-flex align-center justify-space-between">
                 <span class="text-body-2 text-medium-emphasis">{{ t('settings.model') }}</span>
-                <span class="text-body-2">{{ appStore.status?.aiModel || t('settings.default') }}</span>
+                <span class="text-body-2">{{
+                  appStore.status?.aiModel || t('settings.default')
+                }}</span>
               </div>
               <div
                 v-if="appStore.status?.aiProvider === 'ollama'"
                 class="d-flex align-center justify-space-between"
               >
                 <span class="text-body-2 text-medium-emphasis">{{ t('settings.apiUrl') }}</span>
-                <span class="text-body-2">{{ appStore.status?.aiApiUrl || t('settings.default') }}</span>
+                <span class="text-body-2">{{
+                  appStore.status?.aiApiUrl || t('settings.default')
+                }}</span>
               </div>
             </template>
             <div class="d-flex align-center justify-space-between">
@@ -186,7 +212,11 @@
             </template>
             <template v-if="!appStore.aiDataSharingAcknowledged">
               <p class="text-body-2 mb-2">
-                {{ t('views.settings.dataSharingMessage', { provider: getAIProviderLabel(appStore.aiProvider) }) }}
+                {{
+                  t('views.settings.dataSharingMessage', {
+                    provider: getAIProviderLabel(appStore.aiProvider),
+                  })
+                }}
               </p>
               <v-btn size="small" color="warning" variant="flat" @click="showPrivacyDialog = true">
                 {{ t('views.settings.reviewAndAcknowledge') }}
@@ -290,7 +320,9 @@
             </div>
             <div class="d-flex align-center justify-space-between">
               <span class="text-body-2 text-medium-emphasis">{{ t('settings.license') }}</span>
-              <span class="text-body-2 font-weight-medium">{{ t('views.settings.unlicense') }}</span>
+              <span class="text-body-2 font-weight-medium">{{
+                t('views.settings.unlicense')
+              }}</span>
             </div>
             <v-divider class="my-2" />
             <div class="d-flex align-center">
@@ -321,7 +353,11 @@
           </v-alert>
 
           <p class="text-body-2 mb-3">
-            {{ t('views.settings.privacyDialog.dataWillBeSent', { provider: getAIProviderLabel(appStore.aiProvider) }) }}
+            {{
+              t('views.settings.privacyDialog.dataWillBeSent', {
+                provider: getAIProviderLabel(appStore.aiProvider),
+              })
+            }}
           </p>
 
           <ul class="text-body-2 mb-4 ml-4">
@@ -333,7 +369,8 @@
 
           <v-alert type="info" variant="tonal" density="compact" class="mb-3">
             <span class="text-body-2">
-              <strong>{{ t('views.settings.privacyDialog.privacyTip') }}:</strong> {{ t('views.settings.privacyDialog.privacyTipMessage') }}
+              <strong>{{ t('views.settings.privacyDialog.privacyTip') }}:</strong>
+              {{ t('views.settings.privacyDialog.privacyTipMessage') }}
             </span>
           </v-alert>
 
@@ -342,9 +379,13 @@
           </p>
         </v-card-text>
         <v-card-actions class="px-4 pb-4">
-          <v-btn variant="text" @click="showPrivacyDialog = false">{{ t('common.buttons.cancel') }}</v-btn>
+          <v-btn variant="text" @click="showPrivacyDialog = false">{{
+            t('common.buttons.cancel')
+          }}</v-btn>
           <v-spacer />
-          <v-btn color="warning" variant="flat" @click="acknowledgeAndClose"> {{ t('common.buttons.iUnderstand') }} </v-btn>
+          <v-btn color="warning" variant="flat" @click="acknowledgeAndClose">
+            {{ t('common.buttons.iUnderstand') }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -430,7 +471,10 @@ async function handleLogout(): Promise<void> {
     showSnackbar(t('views.settings.successfullySignedOut'), 'success');
     router.push('/login');
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.settings.failedToSignOut'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.settings.failedToSignOut'),
+      'error'
+    );
   } finally {
     loggingOut.value = false;
   }

@@ -31,7 +31,9 @@
             <!-- Loading State -->
             <div v-if="authStore.loading" class="text-center py-8">
               <v-progress-circular indeterminate color="primary" size="48" />
-              <p class="text-body-2 text-medium-emphasis mt-4">{{ t('common.messages.authenticating') }}</p>
+              <p class="text-body-2 text-medium-emphasis mt-4">
+                {{ t('common.messages.authenticating') }}
+              </p>
             </div>
 
             <!-- No Auth Methods Configured -->
@@ -97,7 +99,9 @@
               <!-- OAuth Divider -->
               <div v-if="authStore.hasBasicAuth && authStore.hasOAuth" class="my-6">
                 <v-divider>
-                  <span class="text-caption text-medium-emphasis px-3">{{ t('views.login.orContinueWith') }}</span>
+                  <span class="text-caption text-medium-emphasis px-3">{{
+                    t('views.login.orContinueWith')
+                  }}</span>
                 </v-divider>
               </div>
 

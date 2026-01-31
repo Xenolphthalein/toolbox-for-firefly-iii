@@ -3,7 +3,8 @@
     <v-card rounded="lg">
       <v-card-title class="d-flex align-center">
         <v-icon :color="blockInfo.color" class="mr-2">{{ blockInfo.icon }}</v-icon>
-        {{ isEditing ? t('components.converter.editBlock') : t('components.converter.addBlock') }} {{ blockInfo.label }} {{ t('components.converter.block') }}
+        {{ isEditing ? t('components.converter.editBlock') : t('components.converter.addBlock') }}
+        {{ blockInfo.label }} {{ t('components.converter.block') }}
       </v-card-title>
 
       <v-card-text>
@@ -67,7 +68,8 @@
             persistent-hint
           />
           <v-alert type="info" variant="tonal" density="compact" class="mt-4">
-            <strong>{{ t('components.converter.formatTokens') }}:</strong> {{ t('components.converter.formatTokensDesc') }}
+            <strong>{{ t('components.converter.formatTokens') }}:</strong>
+            {{ t('components.converter.formatTokensDesc') }}
           </v-alert>
         </template>
 
@@ -241,7 +243,9 @@
             >
               <v-expansion-panel-title>
                 <div class="d-flex align-center ga-2 flex-grow-1">
-                  <v-chip size="x-small" color="primary">{{ t('components.converter.case') }} {{ index + 1 }}</v-chip>
+                  <v-chip size="x-small" color="primary"
+                    >{{ t('components.converter.case') }} {{ index + 1 }}</v-chip
+                  >
                   <span class="text-body-2"> {{ caseItem.operator }} "{{ caseItem.value }}" </span>
                   <v-chip size="x-small" class="ml-auto mr-2">
                     {{ t('components.converter.blocksCount', { count: caseItem.blocks.length }) }}
@@ -404,7 +408,8 @@
         <!-- Custom Script Block -->
         <template v-else-if="localBlock.type === 'customScript'">
           <v-alert type="warning" variant="tonal" density="compact" class="mb-4">
-            <strong>{{ t('common.labels.warning') }}:</strong> {{ t('components.converter.customScriptWarning') }}
+            <strong>{{ t('common.labels.warning') }}:</strong>
+            {{ t('components.converter.customScriptWarning') }}
           </v-alert>
           <v-textarea
             v-model="(localBlock as CustomScriptBlock).script"
@@ -421,7 +426,9 @@
       <v-card-actions>
         <v-spacer />
         <v-btn variant="text" @click="onCancel">{{ t('common.buttons.cancel') }}</v-btn>
-        <v-btn color="primary" @click="onSave">{{ isEditing ? t('common.buttons.save') : t('common.buttons.add') }}</v-btn>
+        <v-btn color="primary" @click="onSave">{{
+          isEditing ? t('common.buttons.save') : t('common.buttons.add')
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

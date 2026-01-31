@@ -18,7 +18,11 @@
             size="small"
             @click="$emit('toggle-select-all')"
           >
-            {{ allSelected ? t('common.buttons.deselectAll') : (selectAllText || t('common.buttons.selectAll')) }}
+            {{
+              allSelected
+                ? t('common.buttons.deselectAll')
+                : selectAllText || t('common.buttons.selectAll')
+            }}
           </v-btn>
           <v-btn
             v-if="selectedCount > 0"

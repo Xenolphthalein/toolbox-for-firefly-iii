@@ -35,7 +35,9 @@
           {{ t('components.converter.then') }}
         </div>
         <div class="nested-blocks-list">
-          <div v-if="block.thenBlocks.length === 0" class="empty-branch">{{ t('components.converter.keepValue') }}</div>
+          <div v-if="block.thenBlocks.length === 0" class="empty-branch">
+            {{ t('components.converter.keepValue') }}
+          </div>
           <TransformBlockCard
             v-for="nestedBlock in block.thenBlocks"
             :key="nestedBlock.id"
@@ -73,7 +75,9 @@
           {{ t('components.converter.case') }} "{{ caseItem.value }}"
         </div>
         <div class="nested-blocks-list">
-          <div v-if="caseItem.blocks.length === 0" class="empty-branch">{{ t('components.converter.keepValue') }}</div>
+          <div v-if="caseItem.blocks.length === 0" class="empty-branch">
+            {{ t('components.converter.keepValue') }}
+          </div>
           <TransformBlockCard
             v-for="nestedBlock in caseItem.blocks"
             :key="nestedBlock.id"
@@ -138,13 +142,29 @@ const previewLines = computed<DetailLine[]>(() => {
   const block = props.block;
   switch (block.type) {
     case 'column':
-      return [{ label: t('common.labels.from'), value: block.sourceColumn || t('components.converter.notSet') }];
+      return [
+        {
+          label: t('common.labels.from'),
+          value: block.sourceColumn || t('components.converter.notSet'),
+        },
+      ];
     case 'static':
-      return [{ label: t('common.labels.value'), value: block.value ? `"${block.value}"` : t('components.converter.empty') }];
+      return [
+        {
+          label: t('common.labels.value'),
+          value: block.value ? `"${block.value}"` : t('components.converter.empty'),
+        },
+      ];
     case 'truncate':
       return [
-        { label: t('components.converter.maxLength'), value: t('components.converter.chars', { count: block.maxLength }) },
-        { label: t('components.converter.ellipsis'), value: block.ellipsis ? t('common.labels.yes') : t('common.labels.no') },
+        {
+          label: t('components.converter.maxLength'),
+          value: t('components.converter.chars', { count: block.maxLength }),
+        },
+        {
+          label: t('components.converter.ellipsis'),
+          value: block.ellipsis ? t('common.labels.yes') : t('common.labels.no'),
+        },
       ];
     case 'dateFormat':
       return [
@@ -158,18 +178,25 @@ const previewLines = computed<DetailLine[]>(() => {
           value: `${block.inputDecimalSeparator} → ${block.outputDecimalSeparator}`,
         },
         { label: t('components.converter.decimals'), value: String(block.decimals) },
-        ...(block.absolute ? [{ label: t('components.converter.absolute'), value: t('common.labels.yes') }] : []),
+        ...(block.absolute
+          ? [{ label: t('components.converter.absolute'), value: t('common.labels.yes') }]
+          : []),
       ];
     case 'conditional': {
       const source = block.condition.useCurrentValue
         ? t('components.converter.currentValue')
         : block.condition.column || t('components.converter.notSet');
       return [
-        { label: t('components.converter.if'), value: `${source} ${block.condition.operator} "${block.condition.value}"` },
+        {
+          label: t('components.converter.if'),
+          value: `${source} ${block.condition.operator} "${block.condition.value}"`,
+        },
       ];
     }
     case 'switchCase': {
-      const source = block.useCurrentValue ? t('components.converter.currentValue') : block.column || t('components.converter.notSet');
+      const source = block.useCurrentValue
+        ? t('components.converter.currentValue')
+        : block.column || t('components.converter.notSet');
       return [{ label: t('components.converter.switchOn'), value: source }];
     }
     case 'removeRow':
@@ -180,17 +207,37 @@ const previewLines = computed<DetailLine[]>(() => {
         },
       ];
     case 'prefix':
-      return [{ label: t('components.converter.prefix'), value: block.prefix ? `"${block.prefix}"` : t('components.converter.empty') }];
+      return [
+        {
+          label: t('components.converter.prefix'),
+          value: block.prefix ? `"${block.prefix}"` : t('components.converter.empty'),
+        },
+      ];
     case 'suffix':
-      return [{ label: t('components.converter.suffix'), value: block.suffix ? `"${block.suffix}"` : t('components.converter.empty') }];
+      return [
+        {
+          label: t('components.converter.suffix'),
+          value: block.suffix ? `"${block.suffix}"` : t('components.converter.empty'),
+        },
+      ];
     case 'replace':
       return [
-        { label: t('components.converter.find'), value: block.find ? `"${block.find}"` : t('components.converter.empty') },
+        {
+          label: t('components.converter.find'),
+          value: block.find ? `"${block.find}"` : t('components.converter.empty'),
+        },
         { label: t('components.converter.replace'), value: `"${block.replace || ''}"` },
-        ...(block.useRegex ? [{ label: t('components.converter.regex'), value: t('common.labels.yes') }] : []),
+        ...(block.useRegex
+          ? [{ label: t('components.converter.regex'), value: t('common.labels.yes') }]
+          : []),
       ];
     case 'customScript':
-      return [{ label: t('components.converter.script'), value: t('components.converter.customJavaScript') }];
+      return [
+        {
+          label: t('components.converter.script'),
+          value: t('components.converter.customJavaScript'),
+        },
+      ];
     default:
       return [{ label: t('common.labels.type'), value: t('common.labels.unknown') }];
   }

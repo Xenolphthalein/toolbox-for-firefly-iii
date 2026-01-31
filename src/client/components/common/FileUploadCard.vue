@@ -36,7 +36,9 @@
         <!-- Loading State -->
         <template v-if="loading">
           <v-progress-circular indeterminate color="primary" size="48" />
-          <div class="text-body-2 text-medium-emphasis mt-3">{{ t('common.messages.processing') }}</div>
+          <div class="text-body-2 text-medium-emphasis mt-3">
+            {{ t('common.messages.processing') }}
+          </div>
         </template>
 
         <!-- Has File State -->
@@ -45,7 +47,9 @@
           <div class="text-body-1 font-weight-medium mt-3">
             {{ fileName }}
           </div>
-          <div class="text-body-2 text-medium-emphasis mt-1">{{ t('components.fileUpload.clickOrDragToReplace') }}</div>
+          <div class="text-body-2 text-medium-emphasis mt-1">
+            {{ t('components.fileUpload.clickOrDragToReplace') }}
+          </div>
         </template>
 
         <!-- Empty State -->
@@ -54,8 +58,12 @@
             {{ isDragging ? 'mdi-file-download' : fileIcon }}
           </v-icon>
           <div class="text-body-1 mt-3">
-            <span class="text-primary font-weight-medium">{{ t('components.fileUpload.clickToUpload') }}</span>
-            <span class="text-medium-emphasis"> {{ t('components.fileUpload.orDragAndDrop') }}</span>
+            <span class="text-primary font-weight-medium">{{
+              t('components.fileUpload.clickToUpload')
+            }}</span>
+            <span class="text-medium-emphasis">
+              {{ t('components.fileUpload.orDragAndDrop') }}</span
+            >
           </div>
           <div class="text-body-2 text-medium-emphasis mt-1">
             {{ resolvedAcceptLabel }}

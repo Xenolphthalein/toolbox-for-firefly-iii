@@ -3,7 +3,9 @@
     <v-icon :size="64" class="mb-4 empty-state-icon">
       {{ icon }}
     </v-icon>
-    <h3 class="text-h6 empty-state-title mb-2">{{ title || t('components.emptyState.noDataFound') }}</h3>
+    <h3 class="text-h6 empty-state-title mb-2">
+      {{ title || t('components.emptyState.noDataFound') }}
+    </h3>
     <p v-if="subtitle" class="text-body-2 text-medium-emphasis">{{ subtitle }}</p>
     <slot />
   </div>

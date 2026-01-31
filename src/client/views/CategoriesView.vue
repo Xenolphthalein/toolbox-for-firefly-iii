@@ -86,7 +86,9 @@
                 ? [
                     {
                       icon: 'mdi-help-circle',
-                      label: t('views.categories.unclassifiable', { count: unclassifiableSuggestions.length }),
+                      label: t('views.categories.unclassifiable', {
+                        count: unclassifiableSuggestions.length,
+                      }),
                       color: 'warning',
                     },
                   ]
@@ -156,13 +158,15 @@
                   <!-- Unable to classify message -->
                   <template v-if="suggestion.unableToClassify">
                     <v-alert type="warning" variant="tonal" density="compact" class="mb-0">
-                      <strong>{{ t('views.categories.unableToClassify') }}:</strong> {{ t('views.categories.aiCouldNotClassify') }}
+                      <strong>{{ t('views.categories.unableToClassify') }}:</strong>
+                      {{ t('views.categories.aiCouldNotClassify') }}
                     </v-alert>
 
                     <v-expand-transition>
                       <div v-if="showReasoning[suggestion.transactionId]" class="mt-3">
                         <v-alert type="info" variant="tonal" density="compact">
-                          <strong>{{ t('views.categories.aiReasoning') }}</strong> {{ suggestion.reasoning }}
+                          <strong>{{ t('views.categories.aiReasoning') }}</strong>
+                          {{ suggestion.reasoning }}
                         </v-alert>
                       </div>
                     </v-expand-transition>
@@ -173,7 +177,11 @@
                         variant="text"
                         @click="toggleReasoning(suggestion.transactionId)"
                       >
-                        {{ showReasoning[suggestion.transactionId] ? t('views.categories.hideReasoning') : t('views.categories.showReasoning') }}
+                        {{
+                          showReasoning[suggestion.transactionId]
+                            ? t('views.categories.hideReasoning')
+                            : t('views.categories.showReasoning')
+                        }}
                       </v-btn>
                     </div>
                   </template>
@@ -195,14 +203,19 @@
                         variant="text"
                         @click="toggleReasoning(suggestion.transactionId)"
                       >
-                        {{ showReasoning[suggestion.transactionId] ? t('views.categories.hideReasoning') : t('views.categories.showReasoning') }}
+                        {{
+                          showReasoning[suggestion.transactionId]
+                            ? t('views.categories.hideReasoning')
+                            : t('views.categories.showReasoning')
+                        }}
                       </v-btn>
                     </div>
 
                     <v-expand-transition>
                       <div v-if="showReasoning[suggestion.transactionId]" class="mt-3">
                         <v-alert type="info" variant="tonal" density="compact">
-                          <strong>{{ t('views.categories.aiReasoning') }}</strong> {{ suggestion.reasoning }}
+                          <strong>{{ t('views.categories.aiReasoning') }}</strong>
+                          {{ suggestion.reasoning }}
                         </v-alert>
                       </div>
                     </v-expand-transition>
@@ -271,7 +284,10 @@ const { showSnackbar } = useSnackbar();
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToAnalyze') },
-  { title: t('common.steps.reviewApply'), subtitle: t('views.categories.steps.reviewApply.subtitle') },
+  {
+    title: t('common.steps.reviewApply'),
+    subtitle: t('views.categories.steps.reviewApply.subtitle'),
+  },
 ]);
 
 // Step 1: Date range state
@@ -475,10 +491,16 @@ async function getSuggestions() {
         'warning'
       );
     } else if (suggestions.value.length > 0) {
-      showSnackbar(t('views.categories.generatedSuggestions', { count: suggestions.value.length }), 'info');
+      showSnackbar(
+        t('views.categories.generatedSuggestions', { count: suggestions.value.length }),
+        'info'
+      );
     }
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('common.errors.failedToGetSuggestions'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('common.errors.failedToGetSuggestions'),
+      'error'
+    );
   } finally {
     loading.value = false;
   }
@@ -526,7 +548,10 @@ async function applySelected() {
     const result = response.data.data;
 
     showSnackbar(
-      t('views.categories.appliedCategories', { successful: result.successful.length, failed: result.failed.length }),
+      t('views.categories.appliedCategories', {
+        successful: result.successful.length,
+        failed: result.failed.length,
+      }),
       result.failed.length > 0 ? 'warning' : 'success'
     );
 
@@ -535,7 +560,10 @@ async function applySelected() {
     );
     selection.clear();
   } catch (error) {
-    showSnackbar(error instanceof Error ? error.message : t('views.categories.failedToApplyCategories'), 'error');
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.categories.failedToApplyCategories'),
+      'error'
+    );
   } finally {
     applying.value = false;
   }
