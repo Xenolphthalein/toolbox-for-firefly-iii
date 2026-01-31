@@ -63,6 +63,8 @@ export function configureSecurityMiddleware(app: Application): void {
   }
 
   // Configure Helmet with appropriate settings for a self-hosted app
+  const useHttps = config.nodeEnv === 'production' && isAppUrlHttps();
+
   app.use(
     helmet({
       // Content Security Policy - relaxed for SPA with API
@@ -70,7 +72,8 @@ export function configureSecurityMiddleware(app: Application): void {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
+          // Allow WASM and eval (some Vuetify/Vue dependencies require eval)
+          scriptSrc: ["'self'", "'unsafe-eval'", "'wasm-unsafe-eval'"],
           styleSrc: ["'self'", "'unsafe-inline'"], // Vuetify uses inline styles
           imgSrc: ["'self'", 'data:', 'blob:'],
           fontSrc: ["'self'", 'data:'],
@@ -78,6 +81,9 @@ export function configureSecurityMiddleware(app: Application): void {
           frameAncestors: ["'self'"], // Prevent clickjacking
           formAction: ["'self'"],
           baseUri: ["'self'"],
+          // Only upgrade insecure requests when using HTTPS
+          // This prevents browsers from trying HTTPS when serving over HTTP
+          upgradeInsecureRequests: useHttps ? [] : null,
         },
       },
 

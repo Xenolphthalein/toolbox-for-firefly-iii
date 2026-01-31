@@ -88,6 +88,7 @@ app.use(errorHandler);
 // Start server
 const server = app.listen(config.port, () => {
   loggers.server.info(`Toolbox for Firefly III server running on port ${config.port}`);
+  loggers.server.info(`CORS origins: ${config.corsOrigins.join(', ')}`);
   loggers.server.info(`Environment: ${config.nodeEnv}`);
 
   if (config.firefly.apiUrl) {

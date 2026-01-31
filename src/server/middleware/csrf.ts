@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { config, isAuthRequired } from '../config/index.js';
+import { shouldUseSecureCookies } from './security.js';
 
 // Extend Express Session with CSRF token
 declare module 'express-session' {
@@ -160,7 +161,7 @@ export function csrfTokenCookie(req: Request, res: Response, next: NextFunction)
   // Set the CSRF token as a cookie (readable by JavaScript)
   res.cookie(CSRF_COOKIE_NAME, token, {
     httpOnly: false, // Must be false so JavaScript can read it
-    secure: config.nodeEnv === 'production',
+    secure: shouldUseSecureCookies(),
     sameSite: 'lax', // Lax mode to allow OAuth redirect flows
     path: '/',
   });
