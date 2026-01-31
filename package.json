@@ -1,16 +1,16 @@
 {
-  "name": "firefly-toolbox",
+  "name": "toolbox-for-firefly-iii",
   "version": "1.1.0",
   "description": "A collection of tools to enhance and extend the functionality of Firefly III",
   "author": "Xenolphthalein",
   "license": "Unlicense",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xenolphthalein/firefly-toolbox.git"
+    "url": "git+https://github.com/xenolphthalein/toolbox-for-firefly-iii.git"
   },
-  "homepage": "https://github.com/xenolphthalein/firefly-toolbox#readme",
+  "homepage": "https://github.com/xenolphthalein/toolbox-for-firefly-iii#readme",
   "bugs": {
-    "url": "https://github.com/xenolphthalein/firefly-toolbox/issues"
+    "url": "https://github.com/xenolphthalein/toolbox-for-firefly-iii/issues"
   },
   "keywords": [
     "firefly-iii",

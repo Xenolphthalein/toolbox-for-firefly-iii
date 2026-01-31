@@ -205,7 +205,7 @@ export const useAppStore = defineStore(
   },
   {
     persist: {
-      key: 'firefly-toolbox-settings',
+      key: 'toolbox-for-firefly-iii-settings',
       pick: [
         'themeId',
         'darkMode',

@@ -173,7 +173,7 @@ const { t } = useI18n();
 3. Use `t('your.translation.key')` in components
 
 **Locale detection priority:**
-1. User preference in localStorage (`firefly-toolbox-settings`)
+1. User preference in localStorage (`toolbox-for-firefly-iii-settings`)
 2. Environment variable `DEFAULT_LOCALE` (or `VITE_DEFAULT_LOCALE` for backward compatibility)
 3. Browser language
 4. Fallback to English

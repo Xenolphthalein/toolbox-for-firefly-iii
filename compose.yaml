@@ -16,11 +16,11 @@
 #   5. Access via reverse proxy or http://localhost:3000
 
 services:
-  firefly-toolbox:
+  toolbox-for-firefly-iii:
     build: .
     # Or use pre-built image when available:
-    # image: ghcr.io/xenolphthalein/firefly-toolbox:latest
-    container_name: firefly-toolbox
+    # image: ghcr.io/xenolphthalein/toolbox-for-firefly-iii:latest
+    container_name: toolbox-for-firefly-iii
     restart: unless-stopped
     ports:
       #    SECURITY WARNING: Do NOT change 127.0.0.1 to 0.0.0.0!
