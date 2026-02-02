@@ -3,6 +3,11 @@ name: Docker Test Build
 on:
   workflow_dispatch:
     inputs:
+      ref:
+        description: 'Git ref to build (branch, tag, or SHA). Leave empty to use the branch selected above.'
+        required: false
+        type: string
+        default: ''
       tags:
         description: 'Docker image tags (comma-separated, e.g., "test-fix-123,pr-456")'
         required: true
@@ -29,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,6 +63,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -142,7 +151,8 @@ jobs:
         run: |
           echo "## Docker Image Published! :whale:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          REF="${{ inputs.ref || github.ref_name }}"
+          echo "**Source:** \`${REF}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
