@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   checkForErrors,
+  extractErrors,
   extractDialogId,
   extractAccounts,
   extractTanMethods,
@@ -89,6 +90,46 @@ describe('FinTS extractors', () => {
     });
   });
 
+  describe('extractErrors', () => {
+    it('should extract errors from HIRMG segments', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+9050::Die Nachricht enthält Fehler.']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(1);
+      expect(errors[0].code).toBe(9050);
+      expect(errors[0].message).toContain('Fehler');
+    });
+
+    it('should extract multiple errors', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', [
+        'HIRMS:4:2:4+9010::PIN/TAN Prüfung fehlgeschlagen+9931::Anmeldename oder PIN ist falsch.',
+      ]);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(2);
+      expect(errors.map((e) => e.code)).toContain(9010);
+      expect(errors.map((e) => e.code)).toContain(9931);
+    });
+
+    it('should return empty array when no errors', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+0010::Success']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should not include warnings (3xxx codes)', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:4:2:4+3920::Zugelassene TAN-Verfahren:923']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(0);
+    });
+  });
+
   describe('checkForErrors', () => {
     it('should not throw for successful responses (0xxx codes)', () => {
       const segments = new Map<string, string[]>();
@@ -115,7 +156,8 @@ describe('FinTS extractors', () => {
       const segments = new Map<string, string[]>();
       segments.set('HIRMS', ['HIRMS:3:2+9010::Invalid PIN']);
 
-      expect(() => checkForErrors(segments)).toThrow('FinTS Error 9010');
+      // 9010 is an auth error, so it throws with AUTH_ERROR prefix
+      expect(() => checkForErrors(segments)).toThrow('AUTH_ERROR:9010:Invalid PIN');
     });
 
     it('should check both HIRMG and HIRMS', () => {

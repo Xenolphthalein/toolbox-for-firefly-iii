@@ -76,9 +76,19 @@ export function checkForCriticalWarnings(segments: Map<string, string[]>): FinTS
 }
 
 /**
- * Check response for errors (9xxx codes)
+ * FinTS error from response
  */
-export function checkForErrors(segments: Map<string, string[]>): void {
+export interface FinTSError {
+  code: number;
+  message: string;
+}
+
+/**
+ * Extract errors from HIRMG/HIRMS segments
+ * Error codes are in the 9xxx range
+ */
+export function extractErrors(segments: Map<string, string[]>): FinTSError[] {
+  const errors: FinTSError[] = [];
   const returnSegments = segments.get('HIRMG') || [];
   returnSegments.push(...(segments.get('HIRMS') || []));
 
@@ -86,16 +96,59 @@ export function checkForErrors(segments: Map<string, string[]>): void {
     const elements = extractElements(segment);
     for (const element of elements) {
       // Parse return code
-      const codeMatch = element.match(/^(\d{4})/);
+      const codeMatch = element.match(/^(\d{4}):*(.*)/);
       if (codeMatch) {
         const code = parseInt(codeMatch[1], 10);
         // Codes 9xxx are errors
         if (code >= 9000) {
-          throw new Error(`FinTS Error ${code}: ${element.slice(5)}`);
+          errors.push({
+            code,
+            message: codeMatch[2]?.replace(/^:+/, '') || `Error ${code}`,
+          });
         }
       }
     }
   }
+
+  return errors;
+}
+
+/**
+ * Authentication-related error codes that should result in user-friendly messages
+ */
+const AUTH_ERROR_CODES: Record<number, string> = {
+  9010: 'PIN/TAN verification failed',
+  9931: 'Username or PIN is incorrect',
+  9930: 'Username unknown',
+  9942: 'Access blocked',
+  9800: 'Dialog cancelled',
+  9050: 'Request contains errors',
+};
+
+/**
+ * Check response for errors (9xxx codes)
+ * Throws FinTSAuthError for authentication-related errors
+ */
+export function checkForErrors(segments: Map<string, string[]>): void {
+  const errors = extractErrors(segments);
+
+  if (errors.length === 0) {
+    return;
+  }
+
+  // Check for authentication-related errors first
+  for (const error of errors) {
+    if (error.code in AUTH_ERROR_CODES || error.code === 9931 || error.code === 9010) {
+      // Import would cause circular dependency, so we throw a regular error with special marker
+      const authError = new Error(`AUTH_ERROR:${error.code}:${error.message}`);
+      authError.name = 'FinTSAuthError';
+      throw authError;
+    }
+  }
+
+  // For non-auth errors, throw the first one
+  const firstError = errors[0];
+  throw new Error(`FinTS Error ${firstError.code}: ${firstError.message}`);
 }
 
 /**

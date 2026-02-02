@@ -145,6 +145,7 @@ router.post(
  */
 function getAuthErrorMessage(code: number, originalMessage: string): string {
   switch (code) {
+    // Warning codes (3xxx)
     case 3938:
       return 'Your access is temporarily locked. Please unlock your PIN in your banking app or contact your bank.';
     case 3939:
@@ -158,6 +159,15 @@ function getAuthErrorMessage(code: number, originalMessage: string): string {
       return 'TAN has been locked. Please contact your bank.';
     case 3920:
       return 'Authentication failed. No TAN methods available for your account.';
+    // Error codes (9xxx)
+    case 9010:
+      return 'PIN/TAN verification failed. Please check your credentials and try again.';
+    case 9931:
+      return 'Username or PIN is incorrect. Please check your credentials and try again.';
+    case 9930:
+      return 'Username not found. Please verify your login ID.';
+    case 9942:
+      return 'Your access has been blocked. Please contact your bank.';
     default:
       return originalMessage || 'Authentication failed. Please check your credentials.';
   }

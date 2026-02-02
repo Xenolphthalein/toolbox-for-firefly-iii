@@ -115,7 +115,28 @@ export class FinTSClient {
     logger.debug(`Parsed ${initParsedSegments.size} segment types from init response`);
 
     // Check for hard errors first (9xxx codes)
-    checkForErrors(initParsedSegments);
+    try {
+      checkForErrors(initParsedSegments);
+    } catch (error) {
+      // Convert auth error marker to proper FinTSAuthError
+      if (error instanceof Error && error.name === 'FinTSAuthError') {
+        const match = error.message.match(/^AUTH_ERROR:(\d+):(.*)$/);
+        if (match) {
+          const code = parseInt(match[1], 10);
+          const message = match[2];
+          logger.error(`Authentication error: ${code} - ${message}`);
+          // Try to end dialog gracefully
+          try {
+            this.dialogId = extractDialogId(initParsedSegments);
+            await this.endDialog();
+          } catch {
+            // Ignore errors ending dialog after auth failure
+          }
+          throw new FinTSAuthError(message, code);
+        }
+      }
+      throw error;
+    }
 
     // Check for critical warnings (account locked, PIN wrong, etc.)
     const criticalWarning = checkForCriticalWarnings(initParsedSegments);
