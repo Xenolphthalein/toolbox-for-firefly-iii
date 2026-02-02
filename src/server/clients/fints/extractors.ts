@@ -9,7 +9,74 @@ import { logger } from './utils.js';
 import { extractElements } from './parsers.js';
 
 /**
- * Check response for errors
+ * FinTS warning/info codes that indicate specific conditions
+ * These are codes in the 3xxx range that provide important information
+ */
+export interface FinTSWarning {
+  code: number;
+  message: string;
+}
+
+/**
+ * Extract warnings from HIRMG/HIRMS segments
+ * Warning codes are in the 3xxx range
+ */
+export function extractWarnings(segments: Map<string, string[]>): FinTSWarning[] {
+  const warnings: FinTSWarning[] = [];
+  const returnSegments = segments.get('HIRMG') || [];
+  returnSegments.push(...(segments.get('HIRMS') || []));
+
+  for (const segment of returnSegments) {
+    const elements = extractElements(segment);
+    for (const element of elements) {
+      // Parse return code
+      const codeMatch = element.match(/^(\d{4}):*(.*)/);
+      if (codeMatch) {
+        const code = parseInt(codeMatch[1], 10);
+        // Codes 3xxx are warnings/info
+        if (code >= 3000 && code < 4000) {
+          warnings.push({
+            code,
+            message: codeMatch[2]?.replace(/^:+/, '') || `Warning ${code}`,
+          });
+        }
+      }
+    }
+  }
+
+  return warnings;
+}
+
+/**
+ * Check if there are critical warnings that should stop the flow
+ * Returns the warning if found, null otherwise
+ */
+export function checkForCriticalWarnings(segments: Map<string, string[]>): FinTSWarning | null {
+  const warnings = extractWarnings(segments);
+
+  // Check for specific critical warning codes
+  for (const warning of warnings) {
+    switch (warning.code) {
+      case 3938: // Access temporarily locked - PIN block
+        return warning;
+      case 3939: // Access locked
+        return warning;
+      case 3916: // PIN wrong
+        return warning;
+      case 3910: // PIN invalid
+        return warning;
+      case 3931: // TAN wrong
+        return warning;
+      case 3933: // TAN locked
+        return warning;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check response for errors (9xxx codes)
  */
 export function checkForErrors(segments: Map<string, string[]>): void {
   const returnSegments = segments.get('HIRMG') || [];
@@ -196,15 +263,49 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
 
 /**
  * Extract allowed TAN methods for the user from HIRMS 3920
+ *
+ * The format varies by bank but typically looks like:
+ * - "3920::Zugelassene Zwei-Schritt-Verfahren für den Benutzer.:923"
+ * - "3920::Allowed TAN methods:900:910:920"
+ *
+ * The TAN method IDs (3-digit numbers in 900-997 range) can appear:
+ * - After a colon: ":923" or ":900:910:920"
+ * - After a period: ".923"
  */
 export function extractAllowedTanMethods(segments: Map<string, string[]>): string[] {
   const hirmsSegments = segments.get('HIRMS') || [];
 
   for (const segment of hirmsSegments) {
     // Look for 3920 return code which lists allowed TAN methods
-    const match = segment.match(/3920[^']*:([0-9:]+)/);
-    if (match) {
-      return match[1].split(':').filter((m) => m.length > 0);
+    if (!segment.includes('3920')) continue;
+
+    // Extract the part after 3920 (stop at segment separator ' or +)
+    const match3920 = segment.match(/3920[^']+/);
+    if (!match3920) continue;
+
+    const content = match3920[0];
+    logger.debug(`Parsing 3920 content: ${content}`);
+
+    // Find all 3-digit TAN method IDs (900-997 range) in the content
+    // They appear after colons or periods
+    const tanMethodIds: string[] = [];
+    // Match TAN method IDs that:
+    // - Are preceded by : or .
+    // - Are 3 digits starting with 9 (900-999 range, though 999 is single-step)
+    // - Are followed by : or . or ' or end of string or non-digit
+    const idMatches = content.matchAll(/[:.]([89]\d{2})(?=[:.'+ ]|$)/g);
+
+    for (const idMatch of idMatches) {
+      const id = idMatch[1];
+      // Only include 9xx IDs (900-997), exclude 999 (single-step) and 8xx
+      if (id.startsWith('9') && id !== '999' && !tanMethodIds.includes(id)) {
+        tanMethodIds.push(id);
+      }
+    }
+
+    if (tanMethodIds.length > 0) {
+      logger.debug(`Extracted allowed TAN methods: ${tanMethodIds.join(', ')}`);
+      return tanMethodIds;
     }
   }
 

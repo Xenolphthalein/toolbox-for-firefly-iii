@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { FinTSClient, KNOWN_BANKS } from '../clients/fints/index.js';
+import { FinTSClient, FinTSAuthError, KNOWN_BANKS } from '../clients/fints/index.js';
 import { getFireflyApi } from '../clients/firefly.js';
 import { getFinTSClientStore, getFinTSDialogStateStore } from '../services/index.js';
 import { isFireflyConfigured, isFinTSConfigured, config } from '../config/index.js';
@@ -123,10 +123,45 @@ router.post(
     } catch (error) {
       // Clear client on connection failure
       await clearClient(sessionId);
+
+      // Handle authentication errors with user-friendly messages
+      if (error instanceof FinTSAuthError) {
+        logger.warn(`Authentication error (${error.code}): ${error.message}`);
+        return res.status(401).json({
+          success: false,
+          error: error.message,
+          code: error.code,
+          message: getAuthErrorMessage(error.code, error.message),
+        });
+      }
+
       throw error;
     }
   })
 );
+
+/**
+ * Get user-friendly error message for FinTS auth error codes
+ */
+function getAuthErrorMessage(code: number, originalMessage: string): string {
+  switch (code) {
+    case 3938:
+      return 'Your access is temporarily locked. Please unlock your PIN in your banking app or contact your bank.';
+    case 3939:
+      return 'Your access has been locked. Please contact your bank.';
+    case 3916:
+    case 3910:
+      return 'Invalid PIN. Please check your credentials and try again.';
+    case 3931:
+      return 'Invalid TAN. Please try again with a new TAN.';
+    case 3933:
+      return 'TAN has been locked. Please contact your bank.';
+    case 3920:
+      return 'Authentication failed. No TAN methods available for your account.';
+    default:
+      return originalMessage || 'Authentication failed. Please check your credentials.';
+  }
+}
 
 // Submit TAN (for manual TAN entry)
 router.post(
