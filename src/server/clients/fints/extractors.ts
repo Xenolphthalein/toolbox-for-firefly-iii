@@ -104,6 +104,18 @@ export function extractAccounts(segments: Map<string, string[]>): FinTSAccount[]
 
 /**
  * Check if TAN is required and parse TAN methods
+ *
+ * According to FinTS spec, TAN method IDs (Sicherheitsfunktion) are in range 900-997.
+ * The 999 is reserved for single-step mode.
+ *
+ * HITANS segment structure (v6/v7):
+ * <id>:<tanProzess>:<technischeIdentifikation>:<dkTanVerfahren>:<versionDkTanVerfahren>:<name>:
+ * <maxLength>:<erlaubtesFormat>:<textZurBelegung>:<maxReturnLength>:<mehrfachTan>:
+ * <tanZeitDialogbezug>:<auftragsstorno>:<smsAbbuchungskonto>:<auftraggeberkontoErforderlich>:
+ * <challengeKlasse>:<challengeStrukturiert>:<initialisierungsmodus>:<bezeichnungTanMediumErforderlich>:
+ * <antwortHhdUc>:<anzahlUnterstuetztAktiveTanMedien>
+ *
+ * Example: 910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1
  */
 export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMethod[] {
   const methods: FinTSTanMethod[] = [];
@@ -116,16 +128,21 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
     logger.debug(`HITANS elements: ${JSON.stringify(elements)}`);
 
     // The TAN methods are embedded within the last element(s) as colon-separated values
-    // We need to find patterns like: <3-digit-id>:<1-digit-process>:<technical-name>:...
     for (const element of elements) {
       // Use regex to find all TAN method definitions within the element
-      // Format: <id>:<process>:<technicalName>:<optional>:<optional>:<name>:...
-      // Example: 940:2:SealOne:Decoupled::DKB App:::DKB App:2048:N:1:N:0:0:N:J:00:0:N
-      const methodRegex = /(\d{3}):(\d):([^:]*):([^:]*):([^:]*):([^:]*)/g;
+      // TAN method IDs (Sicherheitsfunktion) are in the range 900-997 according to FinTS spec.
+      // Format: <id>:<tanProzess>:<technischeIdentifikation>:<dkTanVerfahren>:<version>:<name>:...
+      // The tanProzess is typically 1 or 2 (Prozessvariante).
+      // Using negative lookbehind to avoid matching numbers that are part of other fields.
+      const methodRegex = /(?:^|:)(9\d{2}):([12]):([^:]*):([^:]*):([^:]*):([^:]*)/g;
       let match;
 
       while ((match = methodRegex.exec(element)) !== null) {
-        const [fullMatch, id, , technicalName, extra1, extra2, possibleName] = match;
+        const [fullMatch, id, tanProzess, technicalName, dkTanVerfahren, version, possibleName] =
+          match;
+
+        // Skip if ID is 999 (single-step mode, not a real TAN method)
+        if (id === '999') continue;
 
         // Determine the name - it could be in different positions
         // For DKB: 940:2:SealOne:Decoupled::DKB App - name is after empty fields
@@ -144,26 +161,29 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
         }
 
         // Check if this is a decoupled (app-based) TAN method
+        // Decoupled methods include pushTAN 2.0, App-based TAN, etc.
         const isDecoupled =
           id === '940' || // DKB App is always method 940
           technicalName?.toLowerCase().includes('sealon') ||
           technicalName?.toLowerCase().includes('decoupled') ||
           technicalName?.toLowerCase().includes('pushtan') ||
-          extra1?.toLowerCase().includes('decoupled') ||
-          extra2?.toLowerCase().includes('decoupled') ||
+          technicalName?.toLowerCase().includes('tan2go') ||
+          dkTanVerfahren?.toLowerCase() === 'app' ||
+          dkTanVerfahren?.toLowerCase() === 'decoupled' ||
+          dkTanVerfahren?.toLowerCase() === 'decoupledpush' ||
           fullMatch.toLowerCase().includes('decoupled');
 
         // Avoid duplicates
         if (!methods.find((m) => m.id === id)) {
           logger.debug(
-            `Parsed TAN method: id=${id}, name=${name}, technical=${technicalName}, isDecoupled=${isDecoupled}`
+            `Parsed TAN method: id=${id}, tanProzess=${tanProzess}, name=${name}, technical=${technicalName}, dkTanVerfahren=${dkTanVerfahren}, isDecoupled=${isDecoupled}`
           );
 
           methods.push({
             id,
             name: name || technicalName || `TAN Method ${id}`,
             technicalName: technicalName || '',
-            version: extra1 || '',
+            version: version || '',
             isDecoupled,
           });
         }

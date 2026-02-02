@@ -212,6 +212,81 @@ describe('FinTS extractors', () => {
         expect(chipTan.technicalName).toContain('HHD');
       }
     });
+
+    it('should only match TAN method IDs in 900-997 range', () => {
+      // This tests the fix for issue #25 where numbers like 180 were incorrectly
+      // matched as TAN method IDs
+      const segments = new Map<string, string[]>();
+      // Simulate HITANS with various numeric fields that should NOT be matched as TAN methods
+      segments.set('HITANS', [
+        'HITANS:70:6:4+1+1+0+N:N:0:910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:180:5:SomeField:::NotATanMethod',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      // Should find 910 but not 180
+      expect(methods.find((m) => m.id === '910')).toBeDefined();
+      expect(methods.find((m) => m.id === '180')).toBeUndefined();
+    });
+
+    it('should correctly parse pushTAN 2.0 (method 922/923)', () => {
+      // Test for Kreissparkasse-style banks that use 922/923 for pushTAN 2.0
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:70:6:4+1+1+0+N:N:0:922:2:pushTAN2:::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:0:N:1:923:2:pushTAN2:DecoupledPush::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.find((m) => m.id === '922')).toBeDefined();
+      expect(methods.find((m) => m.id === '923')).toBeDefined();
+    });
+
+    it('should parse multiple TAN methods from Sparkasse-style banks', () => {
+      // Real-world like HITANS from Sparkasse with multiple TAN methods
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:166:6:4+1+1+0+J:N:0:910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:911:2:HHD1.3.2OPT:HHDOPT1:1.3.2:chipTAN optisch:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:912:2:HHD1.3.2USB:HHDUSB1:1.3.2:chipTAN-USB:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:913:2:Q1S:Secoder_UC:1.2.0:chipTAN-QR:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:920:2:smsTAN:::smsTAN:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:921:2:pushTAN:::pushTAN:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:922:2:pushTAN2:::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:923:2:pushTAN2:DecoupledPush::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.length).toBe(8);
+      expect(methods.map((m) => m.id).sort()).toEqual([
+        '910',
+        '911',
+        '912',
+        '913',
+        '920',
+        '921',
+        '922',
+        '923',
+      ]);
+
+      // Verify names are correctly extracted
+      const chipTanManuell = methods.find((m) => m.id === '910');
+      expect(chipTanManuell?.name).toBe('chipTAN manuell');
+
+      const pushTan20 = methods.find((m) => m.id === '923');
+      expect(pushTan20?.name).toBe('pushTAN 2.0');
+    });
+
+    it('should identify decoupled TAN methods by dkTanVerfahren field', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:70:7:4+1+1+0+J:N:0:923:2:pushTAN2:DecoupledPush::pushTAN 2.0',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      const pushTan = methods.find((m) => m.id === '923');
+      expect(pushTan).toBeDefined();
+      expect(pushTan?.isDecoupled).toBe(true);
+    });
+
+    it('should not match 999 as it is reserved for single-step mode', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', ['HITANS:70:6:4+1+1+1+999:2:singleStep:::Single Step TAN']);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.find((m) => m.id === '999')).toBeUndefined();
+    });
   });
 
   describe('extractAllowedTanMethods', () => {
