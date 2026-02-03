@@ -25,19 +25,36 @@ import {
   buildHKSPA,
   buildHKTAN,
   buildHKKAZ,
+  buildHKSYN,
 } from './segments.js';
 import { wrapMessage, wrapAuthenticatedMessage } from './message.js';
 import { parseSegments, extractElements } from './parsers.js';
 import { parseMT940 } from './mt940.js';
 import {
   checkForErrors,
+  checkForCriticalWarnings,
   extractDialogId,
   extractAccounts,
   extractTanMethods,
   extractAllowedTanMethods,
   checkTanRequired,
+  checkSyncRequired,
+  extractSystemId,
 } from './extractors.js';
 import { sendRequest } from './transport.js';
+
+/**
+ * Custom error class for FinTS authentication issues
+ */
+export class FinTSAuthError extends Error {
+  constructor(
+    message: string,
+    public code: number
+  ) {
+    super(message);
+    this.name = 'FinTSAuthError';
+  }
+}
 
 /**
  * FinTS Client for read-only operations
@@ -56,8 +73,20 @@ export class FinTSClient {
   constructor(config: FinTSConfig) {
     this.config = config;
     this.secRef = generateMsgRef();
+    // Use provided systemId for device recognition (if available)
+    if (config.systemId) {
+      this.systemId = config.systemId;
+      logger.info(`Using provided Kundensystem-ID: ${config.systemId}`);
+    }
     logger.info(`Client created for bank ${config.bankCode}`);
     logger.debug(`FinTS URL: ${config.url}`);
+  }
+
+  /**
+   * Get the current Kundensystem-ID (for persistence)
+   */
+  getSystemId(): string {
+    return this.systemId;
   }
 
   /**
@@ -100,7 +129,39 @@ export class FinTSClient {
 
     logger.debug(`Parsed ${initParsedSegments.size} segment types from init response`);
 
-    checkForErrors(initParsedSegments);
+    // Check for hard errors first (9xxx codes)
+    try {
+      checkForErrors(initParsedSegments);
+    } catch (error) {
+      // Convert auth error marker to proper FinTSAuthError
+      if (error instanceof Error && error.name === 'FinTSAuthError') {
+        const match = error.message.match(/^AUTH_ERROR:(\d+):(.*)$/);
+        if (match) {
+          const code = parseInt(match[1], 10);
+          const message = match[2];
+          logger.error(`Authentication error: ${code} - ${message}`);
+          // Try to end dialog gracefully
+          try {
+            this.dialogId = extractDialogId(initParsedSegments);
+            await this.endDialog();
+          } catch {
+            // Ignore errors ending dialog after auth failure
+          }
+          throw new FinTSAuthError(message, code);
+        }
+      }
+      throw error;
+    }
+
+    // Check for critical warnings (account locked, PIN wrong, etc.)
+    const criticalWarning = checkForCriticalWarnings(initParsedSegments);
+    if (criticalWarning) {
+      logger.error(`Critical warning: ${criticalWarning.code} - ${criticalWarning.message}`);
+      // End dialog gracefully before throwing
+      this.dialogId = extractDialogId(initParsedSegments);
+      await this.endDialog();
+      throw new FinTSAuthError(criticalWarning.message, criticalWarning.code);
+    }
 
     this.dialogId = extractDialogId(initParsedSegments);
     this.msgNumber++;
@@ -116,14 +177,22 @@ export class FinTSClient {
     );
     logger.info(`Allowed TAN methods for user: ${this.allowedTanMethods.join(', ')}`);
 
-    // Select the first allowed TAN method
-    if (this.allowedTanMethods.length > 0) {
-      this.selectedTanMethod = this.allowedTanMethods[0];
-      logger.info(`Selected TAN method: ${this.selectedTanMethod}`);
+    // Validate that we have allowed TAN methods
+    if (this.allowedTanMethods.length === 0) {
+      logger.error('No allowed TAN methods for user - authentication may have failed');
+      await this.endDialog();
+      throw new FinTSAuthError(
+        'No TAN methods available. Please check your credentials and try again.',
+        3920
+      );
     }
 
+    // Select the first allowed TAN method
+    this.selectedTanMethod = this.allowedTanMethods[0];
+    logger.info(`Selected TAN method: ${this.selectedTanMethod}`);
+
     // If only two-step methods are allowed, we need to start a new dialog with TAN
-    if (this.allowedTanMethods.length > 0 && !this.allowedTanMethods.includes('999')) {
+    if (!this.allowedTanMethods.includes('999')) {
       // End current dialog
       await this.endDialog();
 
@@ -186,6 +255,22 @@ export class FinTSClient {
     const parsedSegments = parseSegments(initResponse);
     this.msgNumber++;
 
+    // Check if synchronization is required (9391) - Sparkassen device recognition
+    if (checkSyncRequired(parsedSegments)) {
+      logger.info('Bank requires synchronization (9391) - performing HKSYN...');
+      // Extract dialog ID from response first
+      try {
+        this.dialogId = extractDialogId(parsedSegments);
+      } catch {
+        // Dialog might not be established yet, use 0
+        this.dialogId = '0';
+      }
+      // Perform synchronization to get a new Kundensystem-ID
+      await this.performSynchronization();
+      // Retry dialog with new system ID
+      return this.initDialogWithTan();
+    }
+
     // Don't check for errors yet - 0030 (TAN required) is expected
     this.dialogId = extractDialogId(parsedSegments);
 
@@ -233,6 +318,99 @@ export class FinTSClient {
 
     // If we got here, TAN was somehow not required
     return this.requestAccounts(parsedSegments);
+  }
+
+  /**
+   * Perform synchronization (HKSYN) to obtain a Kundensystem-ID.
+   * This is required by Sparkassen and other banks that use device recognition.
+   * The bank returns error code 9391 when synchronization is needed.
+   *
+   * After synchronization, the new system ID should be stored and reused
+   * for future connections to avoid repeated synchronization requests.
+   */
+  private async performSynchronization(): Promise<void> {
+    logger.info('Performing synchronization (HKSYN) to obtain Kundensystem-ID...');
+
+    // End any existing dialog first
+    if (this.dialogId !== '0') {
+      try {
+        await this.endDialog();
+      } catch {
+        // Ignore errors ending dialog
+      }
+    }
+
+    // Start fresh dialog for synchronization
+    this.dialogId = '0';
+    this.msgNumber = 1;
+    this.secRef = generateMsgRef();
+
+    // Build synchronization message
+    // Use single-step (999) for the sync dialog
+    const syncSegments = [
+      buildHNSHK(2, this.secRef, this.config.bankCode, this.config.userId, '0', '999'),
+      buildHKIDN(3, this.config.bankCode, this.config.userId, '0'),
+      buildHKVVB(4, 0, 0, this.config.productId || PRODUCT_ID),
+      buildHKSYN(5, 0), // Mode 0 = Request new Kundensystem-ID
+      buildHNSHA(6, this.secRef, this.config.pin),
+    ];
+
+    const syncMessage = wrapAuthenticatedMessage(
+      this.dialogId,
+      this.msgNumber,
+      this.config.bankCode,
+      this.config.userId,
+      '0', // Use 0 for systemId during sync
+      syncSegments
+    );
+
+    logMessage('debug', 'Synchronization message', syncMessage);
+
+    const syncResponse = await sendRequest(this.config.url, syncMessage);
+    logMessage('debug', 'Synchronization response', syncResponse);
+
+    const parsedSegments = parseSegments(syncResponse);
+    this.msgNumber++;
+
+    // Extract dialog ID
+    try {
+      this.dialogId = extractDialogId(parsedSegments);
+    } catch {
+      this.dialogId = '0';
+    }
+
+    // Check for errors (but some banks may return warnings during sync)
+    const errors = parsedSegments.get('HIRMG') || [];
+    errors.push(...(parsedSegments.get('HIRMS') || []));
+
+    // Extract the new Kundensystem-ID from HISYN response
+    const newSystemId = extractSystemId(parsedSegments);
+
+    if (newSystemId) {
+      logger.info(`Obtained new Kundensystem-ID: ${newSystemId}`);
+      this.systemId = newSystemId;
+
+      // Notify that the system ID should be persisted
+      // The caller should store this for future use
+      if (this.config.onSystemIdReceived) {
+        this.config.onSystemIdReceived(newSystemId);
+      }
+    } else {
+      logger.warn('No Kundensystem-ID received from HISYN response');
+      // Check if there were actual errors
+      checkForErrors(parsedSegments);
+    }
+
+    // End the sync dialog
+    if (this.dialogId !== '0') {
+      try {
+        await this.endDialog();
+      } catch {
+        // Ignore errors ending dialog
+      }
+    }
+
+    logger.info('Synchronization completed successfully');
   }
 
   /**

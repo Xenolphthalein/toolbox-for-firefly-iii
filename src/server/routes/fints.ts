@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { FinTSClient, KNOWN_BANKS } from '../clients/fints/index.js';
+import { FinTSClient, FinTSAuthError, KNOWN_BANKS } from '../clients/fints/index.js';
 import { getFireflyApi } from '../clients/firefly.js';
 import { getFinTSClientStore, getFinTSDialogStateStore } from '../services/index.js';
 import { isFireflyConfigured, isFinTSConfigured, config } from '../config/index.js';
@@ -28,6 +28,28 @@ const logger = createLogger('FinTS:Routes');
 // Use session stores with TTL-based lifecycle management
 const clientStore = getFinTSClientStore<FinTSClient>();
 const dialogStateStore = getFinTSDialogStateStore<FinTSDialogState>();
+
+/**
+ * Store for Kundensystem-IDs (device recognition).
+ * Key format: `${bankCode}:${userId}`
+ * These IDs should be persisted across restarts for optimal UX.
+ * In production, consider storing in a database or file.
+ */
+const systemIdStore = new Map<string, string>();
+
+function getSystemIdKey(bankCode: string, userId: string): string {
+  return `${bankCode}:${userId}`;
+}
+
+function getStoredSystemId(bankCode: string, userId: string): string | undefined {
+  return systemIdStore.get(getSystemIdKey(bankCode, userId));
+}
+
+function storeSystemId(bankCode: string, userId: string, systemId: string): void {
+  const key = getSystemIdKey(bankCode, userId);
+  systemIdStore.set(key, systemId);
+  logger.info(`Stored Kundensystem-ID for ${bankCode}:${userId.substring(0, 4)}***`);
+}
 
 function getClient(sessionId: string): FinTSClient | undefined {
   return clientStore.get(sessionId);
@@ -99,10 +121,21 @@ router.post(
     // Clear any existing client
     await clearClient(sessionId);
 
-    // Use configured product ID from environment
+    // Check for stored Kundensystem-ID (device recognition)
+    const storedSystemId = getStoredSystemId(clientConfig.bankCode, clientConfig.userId);
+    if (storedSystemId) {
+      logger.info(`Using stored Kundensystem-ID for bank ${clientConfig.bankCode}`);
+    }
+
+    // Use configured product ID from environment and include stored systemId
     const fintsConfig = {
       ...clientConfig,
       productId: config.fints.productId,
+      systemId: storedSystemId,
+      // Callback to store new systemId when received from bank
+      onSystemIdReceived: (newSystemId: string) => {
+        storeSystemId(clientConfig.bankCode, clientConfig.userId, newSystemId);
+      },
     };
 
     // Create new client and initialize dialog
@@ -112,6 +145,12 @@ router.post(
     try {
       const state = await client.initDialog();
       dialogStateStore.set(sessionId, state);
+
+      // Store the systemId after successful connection (in case it was obtained during sync)
+      const currentSystemId = client.getSystemId();
+      if (currentSystemId && currentSystemId !== '0' && currentSystemId !== storedSystemId) {
+        storeSystemId(clientConfig.bankCode, clientConfig.userId, currentSystemId);
+      }
 
       logger.info(`Connection successful, found ${state.accounts?.length || 0} accounts`);
 
@@ -123,10 +162,57 @@ router.post(
     } catch (error) {
       // Clear client on connection failure
       await clearClient(sessionId);
+
+      // Handle authentication errors with user-friendly messages
+      if (error instanceof FinTSAuthError) {
+        logger.warn(`Authentication error (${error.code}): ${error.message}`);
+        return res.status(401).json({
+          success: false,
+          error: error.message,
+          code: error.code,
+          message: getAuthErrorMessage(error.code, error.message),
+        });
+      }
+
       throw error;
     }
   })
 );
+
+/**
+ * Get user-friendly error message for FinTS auth error codes
+ */
+function getAuthErrorMessage(code: number, originalMessage: string): string {
+  switch (code) {
+    // Warning codes (3xxx)
+    case 3938:
+      return 'Your access is temporarily locked. Please unlock your PIN in your banking app or contact your bank.';
+    case 3939:
+      return 'Your access has been locked. Please contact your bank.';
+    case 3916:
+    case 3910:
+      return 'Invalid PIN. Please check your credentials and try again.';
+    case 3931:
+      return 'Invalid TAN. Please try again with a new TAN.';
+    case 3933:
+      return 'TAN has been locked. Please contact your bank.';
+    case 3920:
+      return 'Authentication failed. No TAN methods available for your account.';
+    // Error codes (9xxx)
+    case 9010:
+      return 'PIN/TAN verification failed. Please check your credentials and try again.';
+    case 9931:
+      return 'Username or PIN is incorrect. Please check your credentials and try again.';
+    case 9930:
+      return 'Username not found. Please verify your login ID.';
+    case 9942:
+      return 'Your access has been blocked. Please contact your bank.';
+    case 9391:
+      return 'Device synchronization required. Please try again - the system will automatically synchronize.';
+    default:
+      return originalMessage || 'Authentication failed. Please check your credentials.';
+  }
+}
 
 // Submit TAN (for manual TAN entry)
 router.post(

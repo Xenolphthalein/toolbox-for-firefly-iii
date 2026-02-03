@@ -72,6 +72,20 @@ export function buildHKEND(segmentNumber: number, dialogId: string): string {
 }
 
 /**
+ * Build HKSYN (Synchronization)
+ * Used to synchronize/obtain a Kundensystem-ID when the bank requires device recognition.
+ * This is required when the bank returns error code 9391.
+ *
+ * Format: HKSYN:<seg>:3+<mode>'
+ * Mode: 0 = New Kundensystem-ID (request new ID)
+ *       1 = Last processed message number
+ *       2 = Signature ID
+ */
+export function buildHKSYN(segmentNumber: number, mode: 0 | 1 | 2 = 0): string {
+  return `HKSYN:${segmentNumber}:3+${mode}'`;
+}
+
+/**
  * Build HNSHA (Signature Footer) - for PIN/TAN
  * Format: HNSHA:<seg>:2+<secRef>++<pin>:<tan>' or just '<pin>'
  */

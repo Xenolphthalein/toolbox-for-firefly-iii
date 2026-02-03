@@ -377,6 +377,17 @@ export interface FinTSConfig {
   pin: string;
   /** Product ID (optional, for registration) */
   productId?: string;
+  /**
+   * Kundensystem-ID for device recognition (optional).
+   * If provided, this ID will be used instead of requesting a new one.
+   * Sparkassen require this to be persistent across sessions.
+   */
+  systemId?: string;
+  /**
+   * Callback when a new Kundensystem-ID is received from the bank.
+   * The caller should persist this ID for future connections.
+   */
+  onSystemIdReceived?: (systemId: string) => void;
 }
 
 export interface FinTSAccount {
