@@ -152,6 +152,50 @@ export function checkForErrors(segments: Map<string, string[]>): void {
 }
 
 /**
+ * Check if synchronization is required (error code 9391)
+ * This is required when the bank requires device recognition via Kundensystem-ID.
+ * Per FinTS spec and Sparkassen requirements, the client must respond with HKSYN.
+ */
+export function checkSyncRequired(segments: Map<string, string[]>): boolean {
+  const errors = extractErrors(segments);
+  return errors.some((error) => error.code === 9391);
+}
+
+/**
+ * Extract Kundensystem-ID from HISYN (synchronization response) segment.
+ * The bank returns a new system ID that must be persisted and used in future dialogs.
+ *
+ * HISYN segment format: HISYN:<seg>:<ver>+<kundensystemID>+<nachrichtennummer>+<signaturID>
+ * We're interested in the first data element (kundensystemID).
+ */
+export function extractSystemId(segments: Map<string, string[]>): string | null {
+  const hisynSegments = segments.get('HISYN') || [];
+
+  for (const segment of hisynSegments) {
+    const elements = extractElements(segment);
+    // HISYN format varies:
+    // - Without ref: HISYN:4:4+<systemId>+... → elements[0] = systemId
+    // - With ref: HISYN:4:4:5+<systemId>+... → elements[0] = ':5', elements[1] = systemId
+    // Skip any element that starts with ':' (segment reference)
+    let systemIdIndex = 0;
+    if (elements.length > 0 && elements[0]?.startsWith(':')) {
+      systemIdIndex = 1;
+    }
+
+    if (elements.length > systemIdIndex && elements[systemIdIndex]) {
+      const systemId = elements[systemIdIndex];
+      // System ID is typically numeric or alphanumeric, not '0'
+      if (systemId && systemId !== '0') {
+        logger.debug(`Extracted Kundensystem-ID from HISYN: ${systemId}`);
+        return systemId;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Extract dialog ID from response
  */
 export function extractDialogId(segments: Map<string, string[]>): string {

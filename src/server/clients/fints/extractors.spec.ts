@@ -9,6 +9,8 @@ import {
   checkTanRequired,
   extractWarnings,
   checkForCriticalWarnings,
+  checkSyncRequired,
+  extractSystemId,
 } from './extractors.js';
 
 // Mock the utils logger
@@ -186,6 +188,83 @@ describe('FinTS extractors', () => {
       segments.set('HIRMG', ['HIRMG:2:2+8999::Not an error']);
 
       expect(() => checkForErrors(segments)).not.toThrow();
+    });
+  });
+
+  describe('checkSyncRequired', () => {
+    it('should return true when 9391 error is present', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+9391::Kundensystem-ID ungültig']);
+
+      expect(checkSyncRequired(segments)).toBe(true);
+    });
+
+    it('should return false when no 9391 error', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+9010::Invalid PIN']);
+
+      expect(checkSyncRequired(segments)).toBe(false);
+    });
+
+    it('should return false for empty segments', () => {
+      const segments = new Map<string, string[]>();
+
+      expect(checkSyncRequired(segments)).toBe(false);
+    });
+
+    it('should detect 9391 in HIRMG as well', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+9391::Kundensystem-ID erforderlich']);
+
+      expect(checkSyncRequired(segments)).toBe(true);
+    });
+  });
+
+  describe('extractSystemId', () => {
+    it('should extract system ID from HISYN segment', () => {
+      const segments = new Map<string, string[]>();
+      // HISYN segment format: HISYN:<seg>:<ver>:<refSeg>+<kundensystemID>+<nachrichtennummer>+<signaturID>
+      // After extractElements, elements[0] = ':refSeg' or kundensystemID depending on format
+      segments.set('HISYN', ['HISYN:4:4+123456789+1+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBe('123456789');
+    });
+
+    it('should extract alphanumeric system ID', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HISYN', ['HISYN:4:4+ABC123DEF456+0+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBe('ABC123DEF456');
+    });
+
+    it('should return null when no HISYN segment', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+0010::OK']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBeNull();
+    });
+
+    it('should return null for system ID of 0', () => {
+      const segments = new Map<string, string[]>();
+      // If the bank returns '0' as system ID, it means not set
+      segments.set('HISYN', ['HISYN:4:4+0+0+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBeNull();
+    });
+
+    it('should handle HISYN with segment reference', () => {
+      const segments = new Map<string, string[]>();
+      // Some banks include reference segment: HISYN:4:4:5+...
+      // extractElements will return [':5', 'systemId', ...]
+      segments.set('HISYN', ['HISYN:4:4:5+SYSID12345+1+0']);
+
+      const systemId = extractSystemId(segments);
+      // Should skip the :5 reference and find the actual system ID
+      expect(systemId).toBe('SYSID12345');
     });
   });
 

@@ -25,6 +25,7 @@ import {
   buildHKSPA,
   buildHKTAN,
   buildHKKAZ,
+  buildHKSYN,
 } from './segments.js';
 import { wrapMessage, wrapAuthenticatedMessage } from './message.js';
 import { parseSegments, extractElements } from './parsers.js';
@@ -37,6 +38,8 @@ import {
   extractTanMethods,
   extractAllowedTanMethods,
   checkTanRequired,
+  checkSyncRequired,
+  extractSystemId,
 } from './extractors.js';
 import { sendRequest } from './transport.js';
 
@@ -70,8 +73,20 @@ export class FinTSClient {
   constructor(config: FinTSConfig) {
     this.config = config;
     this.secRef = generateMsgRef();
+    // Use provided systemId for device recognition (if available)
+    if (config.systemId) {
+      this.systemId = config.systemId;
+      logger.info(`Using provided Kundensystem-ID: ${config.systemId}`);
+    }
     logger.info(`Client created for bank ${config.bankCode}`);
     logger.debug(`FinTS URL: ${config.url}`);
+  }
+
+  /**
+   * Get the current Kundensystem-ID (for persistence)
+   */
+  getSystemId(): string {
+    return this.systemId;
   }
 
   /**
@@ -240,6 +255,22 @@ export class FinTSClient {
     const parsedSegments = parseSegments(initResponse);
     this.msgNumber++;
 
+    // Check if synchronization is required (9391) - Sparkassen device recognition
+    if (checkSyncRequired(parsedSegments)) {
+      logger.info('Bank requires synchronization (9391) - performing HKSYN...');
+      // Extract dialog ID from response first
+      try {
+        this.dialogId = extractDialogId(parsedSegments);
+      } catch {
+        // Dialog might not be established yet, use 0
+        this.dialogId = '0';
+      }
+      // Perform synchronization to get a new Kundensystem-ID
+      await this.performSynchronization();
+      // Retry dialog with new system ID
+      return this.initDialogWithTan();
+    }
+
     // Don't check for errors yet - 0030 (TAN required) is expected
     this.dialogId = extractDialogId(parsedSegments);
 
@@ -287,6 +318,99 @@ export class FinTSClient {
 
     // If we got here, TAN was somehow not required
     return this.requestAccounts(parsedSegments);
+  }
+
+  /**
+   * Perform synchronization (HKSYN) to obtain a Kundensystem-ID.
+   * This is required by Sparkassen and other banks that use device recognition.
+   * The bank returns error code 9391 when synchronization is needed.
+   *
+   * After synchronization, the new system ID should be stored and reused
+   * for future connections to avoid repeated synchronization requests.
+   */
+  private async performSynchronization(): Promise<void> {
+    logger.info('Performing synchronization (HKSYN) to obtain Kundensystem-ID...');
+
+    // End any existing dialog first
+    if (this.dialogId !== '0') {
+      try {
+        await this.endDialog();
+      } catch {
+        // Ignore errors ending dialog
+      }
+    }
+
+    // Start fresh dialog for synchronization
+    this.dialogId = '0';
+    this.msgNumber = 1;
+    this.secRef = generateMsgRef();
+
+    // Build synchronization message
+    // Use single-step (999) for the sync dialog
+    const syncSegments = [
+      buildHNSHK(2, this.secRef, this.config.bankCode, this.config.userId, '0', '999'),
+      buildHKIDN(3, this.config.bankCode, this.config.userId, '0'),
+      buildHKVVB(4, 0, 0, this.config.productId || PRODUCT_ID),
+      buildHKSYN(5, 0), // Mode 0 = Request new Kundensystem-ID
+      buildHNSHA(6, this.secRef, this.config.pin),
+    ];
+
+    const syncMessage = wrapAuthenticatedMessage(
+      this.dialogId,
+      this.msgNumber,
+      this.config.bankCode,
+      this.config.userId,
+      '0', // Use 0 for systemId during sync
+      syncSegments
+    );
+
+    logMessage('debug', 'Synchronization message', syncMessage);
+
+    const syncResponse = await sendRequest(this.config.url, syncMessage);
+    logMessage('debug', 'Synchronization response', syncResponse);
+
+    const parsedSegments = parseSegments(syncResponse);
+    this.msgNumber++;
+
+    // Extract dialog ID
+    try {
+      this.dialogId = extractDialogId(parsedSegments);
+    } catch {
+      this.dialogId = '0';
+    }
+
+    // Check for errors (but some banks may return warnings during sync)
+    const errors = parsedSegments.get('HIRMG') || [];
+    errors.push(...(parsedSegments.get('HIRMS') || []));
+
+    // Extract the new Kundensystem-ID from HISYN response
+    const newSystemId = extractSystemId(parsedSegments);
+
+    if (newSystemId) {
+      logger.info(`Obtained new Kundensystem-ID: ${newSystemId}`);
+      this.systemId = newSystemId;
+
+      // Notify that the system ID should be persisted
+      // The caller should store this for future use
+      if (this.config.onSystemIdReceived) {
+        this.config.onSystemIdReceived(newSystemId);
+      }
+    } else {
+      logger.warn('No Kundensystem-ID received from HISYN response');
+      // Check if there were actual errors
+      checkForErrors(parsedSegments);
+    }
+
+    // End the sync dialog
+    if (this.dialogId !== '0') {
+      try {
+        await this.endDialog();
+      } catch {
+        // Ignore errors ending dialog
+      }
+    }
+
+    logger.info('Synchronization completed successfully');
   }
 
   /**

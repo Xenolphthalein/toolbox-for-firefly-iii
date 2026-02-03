@@ -29,6 +29,28 @@ const logger = createLogger('FinTS:Routes');
 const clientStore = getFinTSClientStore<FinTSClient>();
 const dialogStateStore = getFinTSDialogStateStore<FinTSDialogState>();
 
+/**
+ * Store for Kundensystem-IDs (device recognition).
+ * Key format: `${bankCode}:${userId}`
+ * These IDs should be persisted across restarts for optimal UX.
+ * In production, consider storing in a database or file.
+ */
+const systemIdStore = new Map<string, string>();
+
+function getSystemIdKey(bankCode: string, userId: string): string {
+  return `${bankCode}:${userId}`;
+}
+
+function getStoredSystemId(bankCode: string, userId: string): string | undefined {
+  return systemIdStore.get(getSystemIdKey(bankCode, userId));
+}
+
+function storeSystemId(bankCode: string, userId: string, systemId: string): void {
+  const key = getSystemIdKey(bankCode, userId);
+  systemIdStore.set(key, systemId);
+  logger.info(`Stored Kundensystem-ID for ${bankCode}:${userId.substring(0, 4)}***`);
+}
+
 function getClient(sessionId: string): FinTSClient | undefined {
   return clientStore.get(sessionId);
 }
@@ -99,10 +121,21 @@ router.post(
     // Clear any existing client
     await clearClient(sessionId);
 
-    // Use configured product ID from environment
+    // Check for stored Kundensystem-ID (device recognition)
+    const storedSystemId = getStoredSystemId(clientConfig.bankCode, clientConfig.userId);
+    if (storedSystemId) {
+      logger.info(`Using stored Kundensystem-ID for bank ${clientConfig.bankCode}`);
+    }
+
+    // Use configured product ID from environment and include stored systemId
     const fintsConfig = {
       ...clientConfig,
       productId: config.fints.productId,
+      systemId: storedSystemId,
+      // Callback to store new systemId when received from bank
+      onSystemIdReceived: (newSystemId: string) => {
+        storeSystemId(clientConfig.bankCode, clientConfig.userId, newSystemId);
+      },
     };
 
     // Create new client and initialize dialog
@@ -112,6 +145,12 @@ router.post(
     try {
       const state = await client.initDialog();
       dialogStateStore.set(sessionId, state);
+
+      // Store the systemId after successful connection (in case it was obtained during sync)
+      const currentSystemId = client.getSystemId();
+      if (currentSystemId && currentSystemId !== '0' && currentSystemId !== storedSystemId) {
+        storeSystemId(clientConfig.bankCode, clientConfig.userId, currentSystemId);
+      }
 
       logger.info(`Connection successful, found ${state.accounts?.length || 0} accounts`);
 
@@ -168,6 +207,8 @@ function getAuthErrorMessage(code: number, originalMessage: string): string {
       return 'Username not found. Please verify your login ID.';
     case 9942:
       return 'Your access has been blocked. Please contact your bank.';
+    case 9391:
+      return 'Device synchronization required. Please try again - the system will automatically synchronize.';
     default:
       return originalMessage || 'Authentication failed. Please check your credentials.';
   }
