@@ -294,6 +294,32 @@ export class FinTSClient {
       logger.info(`Order reference: ${this.orderRef}`);
       logger.info(`Challenge: ${challengeText}`);
 
+      // "noref" or "nochallenge" means the bank does NOT require a TAN.
+      // This happens when the device is recognized (valid Kundensystem-ID)
+      // via Sparkassen Geräteerkennung - no SCA needed for known devices.
+      if (this.orderRef === 'noref' || challengeText === 'nochallenge') {
+        logger.info(
+          'No TAN required for login (device recognized via Kundensystem-ID / Geräteerkennung)'
+        );
+
+        // Try to extract accounts from the current response
+        const accounts = extractAccounts(parsedSegments);
+        if (accounts.length > 0) {
+          logger.info(`Found ${accounts.length} account(s) in init response (no TAN needed)`);
+          return {
+            dialogId: this.dialogId,
+            tanRequired: false,
+            tanMethods: this.tanMethods,
+            selectedTanMethod: this.selectedTanMethod,
+            accounts,
+            statusMessage: `Device recognized. Found ${accounts.length} account(s).`,
+          };
+        }
+
+        // No accounts in this response, request them separately
+        return this.requestAccountsAfterTan();
+      }
+
       return {
         dialogId: this.dialogId,
         tanRequired: true,
@@ -478,6 +504,16 @@ export class FinTSClient {
    */
   async pollDecoupledTan(orderRef: string): Promise<FinTSDialogState> {
     logger.info(`Polling for decoupled TAN completion (orderRef: ${orderRef})...`);
+
+    // Guard: if orderRef is "noref", the bank didn't actually require a TAN
+    // (device was recognized). Request accounts directly instead of polling.
+    if (!orderRef || orderRef === 'noref') {
+      logger.info(
+        'No valid order reference - device may be recognized. Requesting accounts directly.'
+      );
+      return this.requestAccountsAfterTan();
+    }
+
     this.orderRef = orderRef;
     this.secRef = generateMsgRef();
 
