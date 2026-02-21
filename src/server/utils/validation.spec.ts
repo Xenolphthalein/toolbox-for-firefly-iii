@@ -81,6 +81,31 @@ describe('validation schemas', () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it('should accept transaction filters', () => {
+      const result = countTransactionsSchema.safeParse({
+        filters: {
+          types: ['withdrawal'],
+          minAmount: 10,
+          maxAmount: 100,
+          tagTerms: ['amazon'],
+          categoryIds: ['cat-1'],
+          descriptionContains: 'market',
+          accountNameContains: 'checking',
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject maxAmount lower than minAmount', () => {
+      const result = countTransactionsSchema.safeParse({
+        filters: {
+          minAmount: 100,
+          maxAmount: 10,
+        },
+      });
+      expect(result.success).toBe(false);
+    });
   });
 
   describe('converterImportSchema', () => {

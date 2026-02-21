@@ -633,6 +633,20 @@
       "fromTo": "From → To"
     },
     "dateRangeFilter": {
+      "showFilters": "More filters",
+      "hideFilters": "Hide filters",
+      "clearFilters": "Clear filters",
+      "activeFilters": "{count} active filter(s)",
+      "transactionTypes": "Transaction Types",
+      "tagsContain": "Tags contain",
+      "inCategories": "In categories",
+      "descriptionContains": "Description contains",
+      "accountContains": "Account name contains",
+      "transactionTypeOptions": {
+        "withdrawal": "Withdrawals",
+        "deposit": "Deposits",
+        "transfer": "Transfers"
+      },
       "presets": {
         "week": "Week",
         "month": "Month",

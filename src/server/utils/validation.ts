@@ -33,10 +33,35 @@ export const dateRangeSchema = z.object({
 /**
  * Count/preview transactions schema (used by Amazon/PayPal count-transactions)
  */
+const transactionFiltersSchema = z
+  .object({
+    types: z
+      .array(z.enum(['withdrawal', 'deposit', 'transfer']))
+      .min(1)
+      .optional(),
+    minAmount: z.number().nonnegative().optional(),
+    maxAmount: z.number().nonnegative().optional(),
+    tagTerms: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
+    categoryIds: z.array(z.string().trim().min(1).max(50)).max(50).optional(),
+    descriptionContains: z.string().trim().min(1).max(255).optional(),
+    accountNameContains: z.string().trim().min(1).max(255).optional(),
+  })
+  .refine(
+    (data) =>
+      data.minAmount === undefined ||
+      data.maxAmount === undefined ||
+      data.maxAmount >= data.minAmount,
+    {
+      message: 'maxAmount must be greater than or equal to minAmount',
+      path: ['maxAmount'],
+    }
+  );
+
 export const countTransactionsSchema = z.object({
   startDate: optionalDateString,
   endDate: optionalDateString,
   excludeProcessed: z.boolean().optional(),
+  filters: transactionFiltersSchema.optional(),
   limit: z.number().int().positive().max(100).optional(),
   offset: z.number().int().nonnegative().optional(),
 });
@@ -390,6 +415,7 @@ const aiSuggestionOptionsSchema = z.object({
 export const suggestionRequestSchema = z.object({
   startDate: optionalDateString,
   endDate: optionalDateString,
+  filters: transactionFiltersSchema.optional(),
   options: aiSuggestionOptionsSchema.optional(),
 });
 

@@ -18,7 +18,8 @@ function createMockTransaction(
   amount: string,
   categoryId: string | null = null,
   categoryName: string | null = null,
-  tags: string[] = []
+  tags: string[] = [],
+  type: FireflyTransactionSplit['type'] = 'withdrawal'
 ): FireflyTransaction {
   return {
     id,
@@ -33,7 +34,7 @@ function createMockTransaction(
           date: '2024-01-01',
           description,
           amount,
-          type: 'withdrawal',
+          type,
           source_id: 'src1',
           source_name: 'Checking',
           destination_id: 'dest1',
@@ -103,7 +104,34 @@ describe('AISuggestionService', () => {
     it('should pass date range to API', async () => {
       await service.getUncategorizedTransactions('2024-01-01', '2024-12-31');
 
-      expect(mockApi.getAllTransactions).toHaveBeenCalledWith('2024-01-01', '2024-12-31');
+      expect(mockApi.getAllTransactions).toHaveBeenCalledWith(
+        '2024-01-01',
+        '2024-12-31',
+        undefined
+      );
+    });
+
+    it('should pass single type filter to API and apply remaining filters', async () => {
+      const transactions = [
+        createMockTransaction('1', 'Coffee', '9.00', null, null, ['morning'], 'withdrawal'),
+        createMockTransaction('2', 'Salary', '1200.00', null, null, [], 'deposit'),
+      ];
+      (mockApi.getAllTransactions as ReturnType<typeof vi.fn>).mockResolvedValue(transactions);
+
+      const result = await service.getUncategorizedTransactions('2024-01-01', '2024-12-31', {
+        types: ['withdrawal'],
+        minAmount: 5,
+        maxAmount: 10,
+        tagTerms: ['morn'],
+      });
+
+      expect(mockApi.getAllTransactions).toHaveBeenCalledWith(
+        '2024-01-01',
+        '2024-12-31',
+        'withdrawal'
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('1');
     });
   });
 

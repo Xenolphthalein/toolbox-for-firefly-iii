@@ -98,6 +98,25 @@ export interface AISuggestionOptions {
   minConfidence?: number;
 }
 
+export type TransactionFilterType = 'withdrawal' | 'deposit' | 'transfer';
+
+export interface TransactionFilters {
+  /** Restrict to one or more transaction types */
+  types?: TransactionFilterType[];
+  /** Minimum absolute amount (inclusive) */
+  minAmount?: number;
+  /** Maximum absolute amount (inclusive) */
+  maxAmount?: number;
+  /** Match if any transaction tag contains one of these terms */
+  tagTerms?: string[];
+  /** Restrict to these category IDs */
+  categoryIds?: string[];
+  /** Case-insensitive substring match on transaction description */
+  descriptionContains?: string;
+  /** Case-insensitive substring match on source or destination account name */
+  accountNameContains?: string;
+}
+
 // Amazon Order Types (from Amazon Order History Exporter)
 export interface AmazonOrderPromotion {
   description: string;

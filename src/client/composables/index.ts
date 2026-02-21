@@ -19,3 +19,16 @@ export {
 } from './useStreamProcessor';
 export { useConverter, type ConverterState, type ConverterActions } from './useConverter';
 export { useSnackbar, type SnackbarType } from './useSnackbar';
+export {
+  useTransactionFilters,
+  normalizeTransactionFilters,
+  countActiveTransactionFilters,
+  serializeTransactionFilters,
+  type TransactionFilterState,
+  type TransactionFilterOption,
+  type AllowedTransactionFilters,
+} from './useTransactionFilters';
+export {
+  useTransactionFilterOptions,
+  type TransactionFilterOptionsState,
+} from './useTransactionFilterOptions';

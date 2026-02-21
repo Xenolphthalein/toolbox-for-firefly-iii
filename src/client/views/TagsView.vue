@@ -36,10 +36,14 @@
         <DateRangeStep
           v-model:start-date="startDate"
           v-model:end-date="endDate"
+          v-model:filters="filters"
           :transactions="preview.transactions.value"
           :count="preview.count.value ?? 0"
           :loading="preview.fetching.value || preview.loadingMore.value"
           :loading-text="t('views.tags.loadingText')"
+          :allowed-filters="allowedFilters"
+          :available-tags="filterOptions.tags.value"
+          :available-categories="filterOptions.categories.value"
           @change="debouncedFetchCount"
           @load-more="loadMoreTransactions"
         />
@@ -216,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../services/api';
 import type { TagSuggestion, TransactionUpdate } from '@shared/types/app';
@@ -232,6 +236,8 @@ import {
   useProgress,
   useSelection,
   useTransactionPreview,
+  useTransactionFilters,
+  useTransactionFilterOptions,
   useStreamProcessor,
   useSnackbar,
   type StreamEvent,
@@ -260,6 +266,16 @@ const wizardSteps = computed(() => [
 // Step 1: Date range state
 const startDate = ref<string>();
 const endDate = ref<string>();
+const allowedFilters = {
+  type: true,
+  amount: true,
+  tags: true,
+  categories: true,
+  description: true,
+  account: true,
+};
+const { filters, cacheKey: filterCacheKey, reset: resetFilters } = useTransactionFilters();
+const filterOptions = useTransactionFilterOptions();
 
 // Transaction preview composable
 const preview = useTransactionPreview();
@@ -294,6 +310,10 @@ const stepLoading = computed(() => {
     default:
       return false;
   }
+});
+
+onMounted(() => {
+  filterOptions.load({ categories: true, tags: true });
 });
 
 const nextButtonText = computed(() => {
@@ -336,6 +356,8 @@ async function fetchTransactionCount() {
   await preview.fetchCount('/suggestions/count-untagged', {
     startDate: startDate.value,
     endDate: endDate.value,
+    filters: filters.value,
+    extra: filterCacheKey.value,
   });
 }
 
@@ -344,6 +366,8 @@ async function loadMoreTransactions() {
   await preview.loadMore('/suggestions/count-untagged', {
     startDate: startDate.value,
     endDate: endDate.value,
+    filters: filters.value,
+    extra: filterCacheKey.value,
   });
 }
 
@@ -360,6 +384,7 @@ function onReset() {
   currentStep.value = 1;
   startDate.value = undefined;
   endDate.value = undefined;
+  resetFilters();
   preview.reset();
   progress.reset();
   selection.clear();
@@ -441,6 +466,7 @@ async function getSuggestions() {
       {
         startDate: startDate.value,
         endDate: endDate.value,
+        filters: filters.value,
         options: { maxSuggestions: 50, minConfidence: 0.3 },
       },
       handleStreamEvent,

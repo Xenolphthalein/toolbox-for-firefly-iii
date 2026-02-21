@@ -10,9 +10,14 @@ import type {
   CategorySuggestion,
   TagSuggestion,
   AISuggestionOptions,
+  TransactionFilters,
   TransactionUpdate,
   BulkUpdateResult,
 } from '../../shared/types/app.js';
+import {
+  filterTransactionsBySplit,
+  normalizeTransactionFilters,
+} from '../utils/transactionFilters.js';
 
 const logger = createLogger('AIService');
 
@@ -39,14 +44,22 @@ export class AISuggestionService {
 
   async getUncategorizedTransactions(
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    filters?: TransactionFilters
   ): Promise<FireflyTransaction[]> {
-    const transactions = await this.fireflyApi.getAllTransactions(startDate, endDate);
+    const normalizedFilters = normalizeTransactionFilters(filters);
+    const typeFilter =
+      normalizedFilters.types && normalizedFilters.types.length === 1
+        ? normalizedFilters.types[0]
+        : undefined;
+    const transactions = await this.fireflyApi.getAllTransactions(startDate, endDate, typeFilter);
 
-    return transactions.filter((t) => {
+    const uncategorized = transactions.filter((t) => {
       const split = t.attributes.transactions[0];
       return split && !split.category_id && !split.category_name;
     });
+
+    return filterTransactionsBySplit(uncategorized, normalizedFilters);
   }
 
   /**
@@ -55,14 +68,22 @@ export class AISuggestionService {
    */
   async getUnprocessedTransactionsForTags(
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    filters?: TransactionFilters
   ): Promise<FireflyTransaction[]> {
-    const transactions = await this.fireflyApi.getAllTransactions(startDate, endDate);
+    const normalizedFilters = normalizeTransactionFilters(filters);
+    const typeFilter =
+      normalizedFilters.types && normalizedFilters.types.length === 1
+        ? normalizedFilters.types[0]
+        : undefined;
+    const transactions = await this.fireflyApi.getAllTransactions(startDate, endDate, typeFilter);
 
-    return transactions.filter((t) => {
+    const unprocessed = transactions.filter((t) => {
       const split = t.attributes.transactions[0];
       return split && !split.tags?.includes(TAGGER_TAG);
     });
+
+    return filterTransactionsBySplit(unprocessed, normalizedFilters);
   }
 
   // Streaming version for category suggestions
@@ -70,7 +91,8 @@ export class AISuggestionService {
     startDate?: string,
     endDate?: string,
     options?: AISuggestionOptions,
-    cachedTransactions?: FireflyTransaction[]
+    cachedTransactions?: FireflyTransaction[],
+    filters?: TransactionFilters
   ): AsyncGenerator<{ type: 'progress' | 'suggestion' | 'error' | 'complete'; data: unknown }> {
     const opts = { ...this.defaultOptions, ...options };
 
@@ -82,7 +104,7 @@ export class AISuggestionService {
       logger.debug(`Using ${uncategorized.length} cached uncategorized transactions`);
     } else {
       logger.debug('Fetching uncategorized transactions...');
-      uncategorized = await this.getUncategorizedTransactions(startDate, endDate);
+      uncategorized = await this.getUncategorizedTransactions(startDate, endDate, filters);
       logger.info(`Found ${uncategorized.length} uncategorized transactions`);
     }
 
@@ -169,7 +191,8 @@ export class AISuggestionService {
     startDate?: string,
     endDate?: string,
     options?: AISuggestionOptions,
-    cachedTransactions?: FireflyTransaction[]
+    cachedTransactions?: FireflyTransaction[],
+    filters?: TransactionFilters
   ): AsyncGenerator<{ type: 'progress' | 'suggestion' | 'error' | 'complete'; data: unknown }> {
     const opts = { ...this.defaultOptions, ...options };
 
@@ -181,7 +204,7 @@ export class AISuggestionService {
       logger.debug(`Using ${unprocessed.length} cached unprocessed transactions for tags`);
     } else {
       logger.debug('Fetching unprocessed transactions for tags...');
-      unprocessed = await this.getUnprocessedTransactionsForTags(startDate, endDate);
+      unprocessed = await this.getUnprocessedTransactionsForTags(startDate, endDate, filters);
       logger.info(`Found ${unprocessed.length} transactions not yet processed for tags`);
     }
 
@@ -253,10 +276,17 @@ export class AISuggestionService {
   async suggestCategories(
     startDate?: string,
     endDate?: string,
-    options?: AISuggestionOptions
+    options?: AISuggestionOptions,
+    filters?: TransactionFilters
   ): Promise<CategorySuggestion[]> {
     const suggestions: CategorySuggestion[] = [];
-    for await (const event of this.streamCategorySuggestions(startDate, endDate, options)) {
+    for await (const event of this.streamCategorySuggestions(
+      startDate,
+      endDate,
+      options,
+      undefined,
+      filters
+    )) {
       if (event.type === 'suggestion') {
         suggestions.push(event.data as CategorySuggestion);
       }
@@ -267,10 +297,17 @@ export class AISuggestionService {
   async suggestTags(
     startDate?: string,
     endDate?: string,
-    options?: AISuggestionOptions
+    options?: AISuggestionOptions,
+    filters?: TransactionFilters
   ): Promise<TagSuggestion[]> {
     const suggestions: TagSuggestion[] = [];
-    for await (const event of this.streamTagSuggestions(startDate, endDate, options)) {
+    for await (const event of this.streamTagSuggestions(
+      startDate,
+      endDate,
+      options,
+      undefined,
+      filters
+    )) {
       if (event.type === 'suggestion') {
         suggestions.push(event.data as TagSuggestion);
       }

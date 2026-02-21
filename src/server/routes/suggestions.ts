@@ -15,17 +15,16 @@ import {
   getCachedTransactions,
   setCachedTransactions,
 } from '../services/transactionCache.js';
+import { serializeTransactionFilters } from '../utils/transactionFilters.js';
 
 const logger = createLogger('Suggestions');
 import {
   validateBody,
-  dateRangeSchema,
   suggestionRequestSchema,
   applySuggestionsSchema,
   countTransactionsSchema,
   type SuggestionRequestBody,
   type ApplySuggestionsBody,
-  type DateRangeBody,
   type CountTransactionsBody,
 } from '../utils/index.js';
 import type { CategorySuggestion, TagSuggestion } from '../../shared/types/app.js';
@@ -46,16 +45,16 @@ router.use((_req: Request, _res: Response, next) => {
 // Get uncategorized transactions
 router.post(
   '/uncategorized',
-  validateBody(dateRangeSchema),
+  validateBody(suggestionRequestSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.body as DateRangeBody;
+    const { startDate, endDate, filters } = req.body as SuggestionRequestBody;
 
-    logger.debug('Fetching uncategorized transactions', { startDate, endDate });
+    logger.debug('Fetching uncategorized transactions', { startDate, endDate, filters });
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
 
-    const transactions = await service.getUncategorizedTransactions(startDate, endDate);
+    const transactions = await service.getUncategorizedTransactions(startDate, endDate, filters);
 
     logger.debug(`Found ${transactions.length} uncategorized transactions`);
 
@@ -70,16 +69,20 @@ router.post(
 // Get unprocessed transactions for tags
 router.post(
   '/untagged',
-  validateBody(dateRangeSchema),
+  validateBody(suggestionRequestSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate } = req.body as DateRangeBody;
+    const { startDate, endDate, filters } = req.body as SuggestionRequestBody;
 
-    logger.debug('Fetching unprocessed transactions for tags', { startDate, endDate });
+    logger.debug('Fetching unprocessed transactions for tags', { startDate, endDate, filters });
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
 
-    const transactions = await service.getUnprocessedTransactionsForTags(startDate, endDate);
+    const transactions = await service.getUnprocessedTransactionsForTags(
+      startDate,
+      endDate,
+      filters
+    );
 
     logger.debug(`Found ${transactions.length} unprocessed transactions for tags`);
 
@@ -101,14 +104,19 @@ router.post(
       throw badRequest('AI is not configured. Please configure OpenAI or Ollama in settings.');
     }
 
-    const { startDate, endDate, options } = req.body as SuggestionRequestBody;
+    const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
 
-    logger.info('Starting category suggestion generation', { startDate, endDate, options });
+    logger.info('Starting category suggestion generation', {
+      startDate,
+      endDate,
+      filters,
+      options,
+    });
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
 
-    const suggestions = await service.suggestCategories(startDate, endDate, options);
+    const suggestions = await service.suggestCategories(startDate, endDate, options, filters);
 
     logger.info(`Generated ${suggestions.length} category suggestions`);
 
@@ -133,9 +141,10 @@ router.post(
       return;
     }
 
-    const { startDate, endDate, options } = req.body as SuggestionRequestBody;
+    const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
     const sessionId = getSessionId(req);
-    const cacheKey = getCacheKey(startDate, endDate, 'uncategorized');
+    const filterKey = serializeTransactionFilters(filters);
+    const cacheKey = getCacheKey(startDate, endDate, `uncategorized-${filterKey}`);
 
     const sse = setupSSE(res, req);
 
@@ -150,7 +159,8 @@ router.post(
         startDate,
         endDate,
         options,
-        cachedTransactions || undefined
+        cachedTransactions || undefined,
+        filters
       )) {
         // Stop processing if client disconnected
         if (!sse.isConnected()) break;
@@ -176,9 +186,10 @@ router.post(
       return;
     }
 
-    const { startDate, endDate, options } = req.body as SuggestionRequestBody;
+    const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
     const sessionId = getSessionId(req);
-    const cacheKey = getCacheKey(startDate, endDate, 'untagged');
+    const filterKey = serializeTransactionFilters(filters);
+    const cacheKey = getCacheKey(startDate, endDate, `untagged-${filterKey}`);
 
     const sse = setupSSE(res, req);
 
@@ -193,7 +204,8 @@ router.post(
         startDate,
         endDate,
         options,
-        cachedTransactions || undefined
+        cachedTransactions || undefined,
+        filters
       )) {
         // Stop processing if client disconnected
         if (!sse.isConnected()) break;
@@ -215,12 +227,12 @@ router.post(
       throw badRequest('AI is not configured. Please configure OpenAI or Ollama in settings.');
     }
 
-    const { startDate, endDate, options } = req.body as SuggestionRequestBody;
+    const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
 
-    const suggestions = await service.suggestTags(startDate, endDate, options);
+    const suggestions = await service.suggestTags(startDate, endDate, options, filters);
 
     res.json({
       success: true,
@@ -311,9 +323,10 @@ router.post(
   '/count-uncategorized',
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, limit, offset } = req.body as CountTransactionsBody;
+    const { startDate, endDate, filters, limit, offset } = req.body as CountTransactionsBody;
     const sessionId = getSessionId(req);
-    const cacheKey = getCacheKey(startDate, endDate, 'uncategorized');
+    const filterKey = serializeTransactionFilters(filters);
+    const cacheKey = getCacheKey(startDate, endDate, `uncategorized-${filterKey}`);
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
@@ -321,7 +334,7 @@ router.post(
     // Check cache first
     let transactions = getCachedTransactions(sessionId, cacheKey);
     if (!transactions) {
-      transactions = await service.getUncategorizedTransactions(startDate, endDate);
+      transactions = await service.getUncategorizedTransactions(startDate, endDate, filters);
       // Cache for later use in stream-categories
       setCachedTransactions(sessionId, cacheKey, transactions);
     }
@@ -345,9 +358,10 @@ router.post(
   '/count-untagged',
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, limit, offset } = req.body as CountTransactionsBody;
+    const { startDate, endDate, filters, limit, offset } = req.body as CountTransactionsBody;
     const sessionId = getSessionId(req);
-    const cacheKey = getCacheKey(startDate, endDate, 'untagged');
+    const filterKey = serializeTransactionFilters(filters);
+    const cacheKey = getCacheKey(startDate, endDate, `untagged-${filterKey}`);
 
     const fireflyApi = getFireflyApi();
     const service = new AISuggestionService(fireflyApi);
@@ -355,7 +369,7 @@ router.post(
     // Check cache first
     let transactions = getCachedTransactions(sessionId, cacheKey);
     if (!transactions) {
-      transactions = await service.getUnprocessedTransactionsForTags(startDate, endDate);
+      transactions = await service.getUnprocessedTransactionsForTags(startDate, endDate, filters);
       // Cache for later use in stream-tags
       setCachedTransactions(sessionId, cacheKey, transactions);
     }
