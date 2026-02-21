@@ -65,26 +65,32 @@ export function configureSecurityMiddleware(app: Application): void {
   // Configure Helmet with appropriate settings for a self-hosted app
   const useHttps = config.nodeEnv === 'production' && isAppUrlHttps();
 
+  // Start with helmet's default CSP directives
+  const cspDirectives = helmet.contentSecurityPolicy.getDefaultDirectives();
+
+  // Remove upgrade-insecure-requests when not using HTTPS to prevent browser upgrade attempts
+  if (!useHttps) {
+    delete cspDirectives['upgrade-insecure-requests'];
+  } else {
+    // In case defaults change in the future, ensure it's set when using HTTPS
+    // Only upgrade insecure requests when using HTTPS
+    // This prevents browsers from trying HTTPS when serving over HTTP
+    cspDirectives['upgrade-insecure-requests'] = [];
+  }
+
+  // Override defaults with our custom requirements (note: CSP uses kebab-case keys)
+  cspDirectives['script-src'] = ["'self'", "'unsafe-eval'", "'wasm-unsafe-eval'"];
+  cspDirectives['style-src'] = ["'self'", "'unsafe-inline'"];
+  cspDirectives['img-src'] = ["'self'", 'data:', 'blob:'];
+  cspDirectives['font-src'] = ["'self'", 'data:'];
+  cspDirectives['connect-src'] = ["'self'"];
+
   app.use(
     helmet({
       // Content Security Policy - relaxed for SPA with API
-      // The SPA loads from same origin and makes API calls
       contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          // Allow WASM and eval (some Vuetify/Vue dependencies require eval)
-          scriptSrc: ["'self'", "'unsafe-eval'", "'wasm-unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'"], // Vuetify uses inline styles
-          imgSrc: ["'self'", 'data:', 'blob:'],
-          fontSrc: ["'self'", 'data:'],
-          connectSrc: ["'self'"],
-          frameAncestors: ["'self'"], // Prevent clickjacking
-          formAction: ["'self'"],
-          baseUri: ["'self'"],
-          // Only upgrade insecure requests when using HTTPS
-          // This prevents browsers from trying HTTPS when serving over HTTP
-          upgradeInsecureRequests: useHttps ? [] : null,
-        },
+        useDefaults: false, // We've already modified helmet's defaults above
+        directives: cspDirectives,
       },
 
       // HTTP Strict Transport Security
