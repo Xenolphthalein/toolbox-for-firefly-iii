@@ -42,7 +42,8 @@
     "test:coverage": "vitest run --coverage",
     "i18n:check": "tsx scripts/check-i18n-keys.ts",
     "i18n:check:json": "tsx scripts/check-i18n-keys.ts --json",
-    "i18n:fix": "tsx scripts/check-i18n-keys.ts --fix"
+    "i18n:fix": "tsx scripts/check-i18n-keys.ts --fix",
+    "bump": "tsx scripts/bump-version.ts"
   },
   "dependencies": {
     "axios": "^1.13.5",
