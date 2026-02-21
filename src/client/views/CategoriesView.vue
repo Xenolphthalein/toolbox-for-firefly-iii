@@ -5,14 +5,14 @@
       v-if="appStore.requiresAIAcknowledgment"
       type="warning"
       variant="tonal"
-      class="mb-4"
+      class="mb-4 ai-acknowledgment-banner"
       prominent
     >
       <v-alert-title>{{ t('common.ai.acknowledgmentRequired') }}</v-alert-title>
       <p class="mb-3">
         {{ t('common.ai.acknowledgmentMessage', { provider: appStore.aiProvider }) }}
       </p>
-      <v-btn color="warning" variant="flat" :to="{ name: 'settings' }">
+      <v-btn color="warning" variant="flat" to="/settings">
         <v-icon start>mdi-cog</v-icon>
         {{ t('common.buttons.goToSettings') }}
       </v-btn>
@@ -580,5 +580,9 @@ async function applySelected() {
 
 .border-primary {
   border: 2px solid rgb(var(--v-theme-primary)) !important;
+}
+
+.ai-acknowledgment-banner {
+  min-height: 140px;
 }
 </style>
