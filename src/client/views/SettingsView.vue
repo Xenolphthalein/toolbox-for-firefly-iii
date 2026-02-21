@@ -316,7 +316,7 @@
           <div class="d-flex flex-column ga-2">
             <div class="d-flex align-center justify-space-between">
               <span class="text-body-2 text-medium-emphasis">{{ t('settings.version') }}</span>
-              <span class="text-body-2 font-weight-medium">1.1.0</span>
+              <span class="text-body-2 font-weight-medium">1.3.0</span>
             </div>
             <div class="d-flex align-center justify-space-between">
               <span class="text-body-2 text-medium-emphasis">{{ t('settings.license') }}</span>
