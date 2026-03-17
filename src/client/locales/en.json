@@ -43,7 +43,10 @@
       "howToUse": "How to use",
       "exportCSV": "Export CSV",
       "downloadCSV": "Download CSV",
-      "confirmImport": "Confirm Import"
+      "confirmImport": "Confirm Import",
+      "manualMatching": "Manual Matching",
+      "createManualMatch": "Create Manual Match",
+      "removeManualMatch": "Remove Manual Match"
     },
     "labels": {
       "username": "Username",
@@ -118,7 +121,9 @@
       "rules": "Rules",
       "readyToImportCount": "Ready to import {count} transactions",
       "rowError": "Row {row}: {message}",
-      "enterTan": "Enter TAN"
+      "enterTan": "Enter TAN",
+      "search": "Search",
+      "manualMatch": "Manual Match"
     },
     "messages": {
       "fetching": "Fetching...",
@@ -142,7 +147,17 @@
       "connectToBankToPreview": "Connect to your bank and fetch transactions to see a preview",
       "waitingForConfirmation": "Waiting for confirmation",
       "pleaseConfirmInBankingApp": "Please confirm in your banking app",
-      "processing": "Processing..."
+      "processing": "Processing...",
+      "noSearchResults": "No matching items found",
+      "tryDifferentSearch": "Try a different search term."
+    },
+    "manualMatching": {
+      "helperText": "Select one imported record and one Firefly transaction to create a manual fallback match.",
+      "fireflyTransactionsTitle": "Unmatched Firefly Transactions",
+      "fireflyTransactionsEmptyTitle": "No unmatched Firefly transactions left",
+      "fireflyTransactionsEmptySubtitle": "Everything is either matched already or has been applied.",
+      "currentAssignmentsTitle": "Current Manual Matches",
+      "noAssignmentsTitle": "No manual matches yet"
     },
     "status": {
       "connected": "Connected",
@@ -405,6 +420,10 @@
         "uploadOrders": {
           "title": "Upload Orders",
           "subtitle": "Load Amazon order data"
+        },
+        "manualMatch": {
+          "title": "Manual Order Match",
+          "subtitle": "Link unmatched orders and transactions"
         }
       },
       "uploadTitle": "Upload Amazon Orders JSON",
@@ -428,6 +447,11 @@
       "failedToUpload": "Failed to upload orders",
       "foundMatches": "Found {matches} match(es) out of {total} transaction(s)",
       "updatedDescriptions": "Updated {successful} description(s)",
+      "manualMatchCreated": "Manual Amazon match created",
+      "manualMatchRemoved": "Manual Amazon match removed",
+      "unmatchedSourceTitle": "Unmatched Amazon Orders",
+      "unmatchedSourceEmptyTitle": "No unmatched Amazon orders left",
+      "unmatchedSourceEmptySubtitle": "All uploaded orders are already matched or have been applied.",
       "breakdown": {
         "orderIdMatch": "Order ID Match",
         "itemTitleMatch": "Item Title Match"
@@ -438,6 +462,10 @@
         "uploadActivity": {
           "title": "Upload Activity",
           "subtitle": "Load PayPal activity data"
+        },
+        "manualMatch": {
+          "title": "Manual PayPal Match",
+          "subtitle": "Link unmatched PayPal records and transactions"
         }
       },
       "uploadTitle": "Upload PayPal Activity Report",
@@ -466,11 +494,16 @@
         "failedToUpload": "Failed to upload transactions",
         "matchesFound": "Found {matches} matches out of {total} transactions",
         "descriptionsUpdated": "Updated {successful} descriptions",
-        "descriptionsUpdatedWithFailed": "Updated {successful} descriptions, {failed} failed"
+        "descriptionsUpdatedWithFailed": "Updated {successful} descriptions, {failed} failed",
+        "manualMatchCreated": "Manual PayPal match created",
+        "manualMatchRemoved": "Manual PayPal match removed"
       },
       "buttons": {
         "configureDateRange": "Configure Date Range"
-      }
+      },
+      "unmatchedSourceTitle": "Unmatched PayPal Records",
+      "unmatchedSourceEmptyTitle": "No unmatched PayPal records left",
+      "unmatchedSourceEmptySubtitle": "All uploaded PayPal records are already matched or have been applied."
     },
     "converter": {
       "uploadTitle": "Bank Export CSV",

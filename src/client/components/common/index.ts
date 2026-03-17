@@ -11,6 +11,7 @@ import ProgressCard from './ProgressCard.vue';
 import FileUploadCard from './FileUploadCard.vue';
 import ResultsSummaryCard from './ResultsSummaryCard.vue';
 import FinalActionButton from './FinalActionButton.vue';
+import ManualMatchBoard from './ManualMatchBoard.vue';
 
 export {
   DateRangeFilter,
@@ -26,4 +27,5 @@ export {
   FileUploadCard,
   ResultsSummaryCard,
   FinalActionButton,
+  ManualMatchBoard,
 };

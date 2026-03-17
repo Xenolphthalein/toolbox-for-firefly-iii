@@ -367,6 +367,7 @@ export const AmazonMatchResultSchema = z.object({
   confidenceBreakdown: AmazonConfidenceBreakdownSchema.optional(),
   suggestedDescription: z.string(),
   suggestedNotes: z.string(),
+  matchMethod: z.enum(['automatic', 'manual']).optional(),
 });
 
 export type ValidatedAmazonMatchResult = z.infer<typeof AmazonMatchResultSchema>;
@@ -415,6 +416,7 @@ export const PayPalMatchResultSchema = z.object({
   confidenceBreakdown: PayPalConfidenceBreakdownSchema.optional(),
   suggestedDescription: z.string(),
   suggestedNotes: z.string(),
+  matchMethod: z.enum(['automatic', 'manual']).optional(),
 });
 
 export type ValidatedPayPalMatchResult = z.infer<typeof PayPalMatchResultSchema>;

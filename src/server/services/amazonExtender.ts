@@ -8,6 +8,7 @@ import type {
   AmazonMatchResult,
   BulkUpdateResult,
 } from '../../shared/types/app.js';
+import { createAmazonMatchResult } from '../../shared/utils/extenderMatching.js';
 
 const logger = createLogger('AmazonExtender');
 
@@ -250,20 +251,14 @@ export class AmazonOrderExtender {
         }
       }
 
-      // Generate suggested description and notes
-      const { description: suggestedDescription, notes: suggestedNotes } = bestMatch
-        ? this.generateDescription(split.description, bestMatch)
-        : { description: split.description, notes: '' };
-
-      const result: AmazonMatchResult = {
+      const result: AmazonMatchResult = createAmazonMatchResult({
         transactionId: transaction.id,
         transaction: split,
         matchedOrder: bestMatch,
         matchConfidence: bestConfidence,
         confidenceBreakdown: bestBreakdown,
-        suggestedDescription,
-        suggestedNotes,
-      };
+        matchMethod: 'automatic',
+      });
 
       yield { type: 'result', data: result };
     }
@@ -368,41 +363,6 @@ export class AmazonOrderExtender {
     );
 
     return { confidence, breakdown };
-  }
-
-  private generateDescription(
-    _originalDescription: string,
-    order: AmazonOrder
-  ): { description: string; notes: string } {
-    const MAX_ITEM_LENGTH = 50;
-
-    // Generate full item descriptions for notes
-    const fullItemsList = order.items.map((item) => {
-      if (item.quantity > 1) {
-        return `${item.quantity}x ${item.title}`;
-      }
-      return item.title;
-    });
-
-    // Generate truncated item descriptions for display
-    const shortItemsList = order.items.map((item) => {
-      let title = item.title;
-      if (title.length > MAX_ITEM_LENGTH) {
-        title = title.substring(0, MAX_ITEM_LENGTH - 3) + '...';
-      }
-      if (item.quantity > 1) {
-        return `${item.quantity}x ${title}`;
-      }
-      return title;
-    });
-
-    // Short description for the description field
-    const shortDescription = `Amazon ${order.orderId}: ${shortItemsList.join(', ')}`;
-
-    // Full description for notes
-    const fullNotes = `Amazon Order ${order.orderId}\n\nItems:\n${fullItemsList.map((item) => `• ${item}`).join('\n')}`;
-
-    return { description: shortDescription, notes: fullNotes };
   }
 
   /**

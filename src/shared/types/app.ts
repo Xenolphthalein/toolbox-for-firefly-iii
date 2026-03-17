@@ -160,6 +160,7 @@ export interface AmazonMatchResult {
   confidenceBreakdown?: ConfidenceBreakdown;
   suggestedDescription: string;
   suggestedNotes: string;
+  matchMethod?: 'automatic' | 'manual';
 }
 
 // PayPal Activity Report Types
@@ -300,6 +301,7 @@ export interface PayPalMatchResult {
   confidenceBreakdown?: PayPalConfidenceBreakdown;
   suggestedDescription: string;
   suggestedNotes: string;
+  matchMethod?: 'automatic' | 'manual';
 }
 
 // API Response Types
