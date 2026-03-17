@@ -152,7 +152,6 @@
       "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff."
     },
     "manualMatching": {
-      "helperText": "Wählen Sie einen importierten Datensatz und eine Firefly-Transaktion aus, um eine manuelle Fallback-Zuordnung zu erstellen.",
       "fireflyTransactionsTitle": "Nicht zugeordnete Firefly-Transaktionen",
       "fireflyTransactionsEmptyTitle": "Keine nicht zugeordneten Firefly-Transaktionen mehr",
       "fireflyTransactionsEmptySubtitle": "Alles ist bereits zugeordnet oder wurde schon angewendet.",

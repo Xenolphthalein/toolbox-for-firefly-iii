@@ -152,7 +152,6 @@
       "tryDifferentSearch": "Try a different search term."
     },
     "manualMatching": {
-      "helperText": "Select one imported record and one Firefly transaction to create a manual fallback match.",
       "fireflyTransactionsTitle": "Unmatched Firefly Transactions",
       "fireflyTransactionsEmptyTitle": "No unmatched Firefly transactions left",
       "fireflyTransactionsEmptySubtitle": "Everything is either matched already or has been applied.",

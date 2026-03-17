@@ -44,7 +44,13 @@
               variant="outlined"
               class="manual-match-item"
               :class="{ 'manual-match-item--selected': selectedSourceId === item.id }"
+              role="button"
+              tabindex="0"
+              :aria-selected="selectedSourceId === item.id"
+              :aria-label="item.title"
               @click="$emit('select-source', item.id)"
+              @keydown.enter.prevent="$emit('select-source', item.id)"
+              @keydown.space.prevent="$emit('select-source', item.id)"
             >
               <v-card-text class="manual-match-item-body">
                 <div class="d-flex justify-space-between align-start ga-3">
@@ -139,7 +145,13 @@
               variant="outlined"
               class="manual-match-item"
               :class="{ 'manual-match-item--selected': selectedTransactionId === item.id }"
+              role="button"
+              tabindex="0"
+              :aria-selected="selectedTransactionId === item.id"
+              :aria-label="item.title"
               @click="$emit('select-transaction', item.id)"
+              @keydown.enter.prevent="$emit('select-transaction', item.id)"
+              @keydown.space.prevent="$emit('select-transaction', item.id)"
             >
               <v-card-text class="manual-match-item-body">
                 <div class="d-flex justify-space-between align-start ga-3">
@@ -325,7 +337,6 @@ export interface ManualMatchBoardAssignment {
 const { t } = useI18n();
 
 const props = defineProps<{
-  helperText: string;
   createButtonText: string;
   createDisabled: boolean;
   sourceTitle: string;
@@ -482,6 +493,11 @@ function formatCount(filtered: number, total: number, query: string): string {
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease;
+}
+
+.manual-match-item:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 
 .manual-match-item--selected {

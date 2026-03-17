@@ -310,7 +310,6 @@
       <template #content-4>
         <div class="manual-match-step">
           <ManualMatchBoard
-            :helper-text="t('common.manualMatching.helperText')"
             :create-button-text="t('common.buttons.createManualMatch')"
             :create-disabled="!manualMatching.canCreateManualMatch"
             :source-title="t('views.amazon.unmatchedSourceTitle')"

@@ -67,13 +67,14 @@ export function buildPayPalSuggestedDetails(transaction: PayPalTransaction): {
   description: string;
   notes: string;
 } {
-  let shortDescription = transaction.name || 'PayPal';
+  const payerName = transaction.name || 'PayPal';
+  let shortDescription = payerName;
   if (transaction.itemDescription) {
     const itemDescription =
       transaction.itemDescription.length > PAYPAL_MAX_DESC_LENGTH
         ? transaction.itemDescription.substring(0, PAYPAL_MAX_DESC_LENGTH - 3) + '...'
         : transaction.itemDescription;
-    shortDescription = `${transaction.name}: ${itemDescription}`;
+    shortDescription = `${payerName}: ${itemDescription}`;
   }
 
   if (shortDescription.length > 100) {
