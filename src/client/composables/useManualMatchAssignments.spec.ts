@@ -18,7 +18,10 @@ interface TestMatchResult {
   matchMethod: 'automatic' | 'manual';
 }
 
-function createTransactionSplit(transactionId: string, description: string): FireflyTransactionSplit {
+function createTransactionSplit(
+  transactionId: string,
+  description: string
+): FireflyTransactionSplit {
   return {
     user: '1',
     transaction_journal_id: `journal-${transactionId}`,
