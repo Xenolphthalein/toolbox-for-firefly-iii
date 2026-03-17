@@ -160,24 +160,21 @@
         <template v-else-if="matchResults.length > 0">
           <!-- Summary Card -->
           <ResultsSummaryCard
+            class="manual-match-summary"
             :stats="[
               {
                 icon: 'mdi-check',
-                label: t('common.labels.countMatches', {
-                  count: matchResults.filter((m) => m.matchedOrder).length,
-                }),
+                label: t('common.labels.countMatches', { count: matchedCount }),
                 color: 'success',
               },
               {
                 icon: 'mdi-help',
-                label: t('common.labels.countUnmatched', {
-                  count: matchResults.filter((m) => !m.matchedOrder).length,
-                }),
+                label: t('common.labels.countUnmatched', { count: unmatchedCount }),
                 color: 'grey',
               },
             ]"
-            :show-select-all="matchResults.filter((m) => m.matchedOrder).length > 0"
-            :selectable-count="matchResults.filter((m) => m.matchedOrder).length"
+            :show-select-all="matchedCount > 0"
+            :selectable-count="matchedCount"
             :all-selected="allMatchesSelected"
             :selected-count="selection.selected.value.length"
             :select-all-text="t('common.labels.selectAllMatches')"
@@ -253,6 +250,15 @@
                     >
                       <strong>{{ t('views.amazon.matchedOrder') }}</strong>
                       <span class="ml-2">{{ result.matchedOrder.orderId }}</span>
+                      <v-chip
+                        v-if="result.matchMethod === 'manual'"
+                        size="x-small"
+                        color="info"
+                        variant="tonal"
+                        class="ml-2"
+                      >
+                        {{ t('common.labels.manualMatch') }}
+                      </v-chip>
                     </v-alert>
 
                     <div class="text-subtitle-2 mb-2">{{ t('views.amazon.orderItems') }}</div>
@@ -301,6 +307,35 @@
         </template>
       </template>
 
+      <template #content-4>
+        <div class="manual-match-step">
+          <ManualMatchBoard
+            :create-button-text="t('common.buttons.createManualMatch')"
+            :create-disabled="!manualMatching.canCreateManualMatch"
+            :source-title="t('views.amazon.unmatchedSourceTitle')"
+            :source-empty-title="t('views.amazon.unmatchedSourceEmptyTitle')"
+            :source-empty-subtitle="t('views.amazon.unmatchedSourceEmptySubtitle')"
+            :source-items="amazonManualSourceItems"
+            :selected-source-id="manualMatching.selectedSourceId.value"
+            :transaction-title="t('common.manualMatching.fireflyTransactionsTitle')"
+            :transaction-empty-title="t('common.manualMatching.fireflyTransactionsEmptyTitle')"
+            :transaction-empty-subtitle="
+              t('common.manualMatching.fireflyTransactionsEmptySubtitle')
+            "
+            :transaction-items="amazonManualTransactionItems"
+            :selected-transaction-id="manualMatching.selectedTransactionId.value"
+            :assignments-title="t('common.manualMatching.currentAssignmentsTitle')"
+            :assignments-empty-title="t('common.manualMatching.noAssignmentsTitle')"
+            :assignments="amazonManualAssignments"
+            :remove-button-text="t('common.buttons.removeManualMatch')"
+            @select-source="manualMatching.selectSource"
+            @select-transaction="manualMatching.selectTransaction"
+            @create-match="createAmazonManualMatch"
+            @remove-match="removeAmazonManualMatch"
+          />
+        </div>
+      </template>
+
       <!-- Final Action Button (Match Transactions) -->
       <template #final-action>
         <FinalActionButton
@@ -328,6 +363,12 @@ import type {
   ConfidenceBreakdown as AmazonConfidenceBreakdown,
 } from '@shared/types/app';
 import {
+  MANUAL_MATCH_CONFIDENCE,
+  createAmazonMatchResult,
+  createAmazonUnmatchedResult,
+  getAmazonOrderIdentity,
+} from '@shared/utils/extenderMatching';
+import {
   WizardStepper,
   ConfidenceChip,
   ConfidenceBreakdown,
@@ -337,27 +378,29 @@ import {
   ResultsSummaryCard,
   FinalActionButton,
   FileUploadCard,
+  ManualMatchBoard,
 } from '../components/common';
 import type { BreakdownItem } from '../components/common/ConfidenceBreakdown.vue';
+import type {
+  ManualMatchBoardAssignment,
+  ManualMatchBoardItem,
+} from '../components/common/ManualMatchBoard.vue';
 import {
   useProgress,
   useSelection,
   useTransactionPreview,
   useStreamProcessor,
   useSnackbar,
+  useManualMatchAssignments,
   type StreamEvent,
   type ProgressData,
   type ValidationErrorData,
 } from '../composables';
 import { formatCurrency, formatDate, AmazonMatchResultSchema, validateFileSize } from '../utils';
 
-// i18n
 const { t } = useI18n();
-
-// Snackbar
 const { showSnackbar } = useSnackbar();
 
-// Wizard state
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   {
@@ -366,25 +409,22 @@ const wizardSteps = computed(() => [
   },
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToMatch') },
   { title: t('common.steps.matchReview'), subtitle: t('common.steps.reviewAndApplyChanges') },
+  {
+    title: t('views.amazon.steps.manualMatch.title'),
+    subtitle: t('views.amazon.steps.manualMatch.subtitle'),
+  },
 ]);
 
-// Step 1: Upload state
 const uploadFile = ref<File[]>([]);
 const uploading = ref(false);
 const loadedOrders = ref<AmazonOrder[]>([]);
-
-// Preview first 10 orders for table display
 const previewOrders = computed(() => loadedOrders.value.slice(0, 10));
 
-// Step 2: Date range state
 const startDate = ref<string>();
 const endDate = ref<string>();
 const excludeProcessed = ref(true);
-
-// Transaction preview composable
 const preview = useTransactionPreview();
 
-// Step 3: Matching state
 const matching = ref(false);
 const applying = ref(false);
 const hasMatched = ref(false);
@@ -392,20 +432,97 @@ const matchResults = ref<AmazonMatchResult[]>([]);
 const customDescriptions = reactive<Record<string, string>>({});
 const customNotes = reactive<Record<string, string>>({});
 
-// Progress tracking composable
 const progress = useProgress('Initializing...');
-
-// Selection composable
 const selection = useSelection<string>();
 
-const allMatchesSelected = computed(() => {
-  const matchedResults = matchResults.value.filter((m) => m.matchedOrder);
-  return (
-    matchedResults.length > 0 && matchedResults.every((m) => selection.isSelected(m.transactionId))
-  );
+const matchedResults = computed(() => matchResults.value.filter((result) => result.matchedOrder));
+const unmatchedResults = computed(() =>
+  matchResults.value.filter((result) => !result.matchedOrder)
+);
+const matchedCount = computed(() => matchedResults.value.length);
+const unmatchedCount = computed(() => unmatchedResults.value.length);
+
+const manualMatching = useManualMatchAssignments<AmazonOrder, AmazonMatchResult>({
+  sourceItems: loadedOrders,
+  matchResults,
+  customDescriptions,
+  customNotes,
+  adapter: {
+    getSourceId: getAmazonOrderIdentity,
+    getMatchedSource: (result) => result.matchedOrder,
+    isMatched: (result) => !!result.matchedOrder,
+    isManualMatch: (result) => result.matchMethod === 'manual',
+    createManualResult: ({ transactionId, transaction, source }) =>
+      createAmazonMatchResult({
+        transactionId,
+        transaction,
+        matchedOrder: source,
+        matchConfidence: MANUAL_MATCH_CONFIDENCE,
+        matchMethod: 'manual',
+      }),
+    createUnmatchedResult: ({ transactionId, transaction }) =>
+      createAmazonUnmatchedResult({
+        transactionId,
+        transaction,
+      }),
+  },
 });
 
-// Computed: Can proceed to next step
+const allMatchesSelected = computed(
+  () =>
+    matchedResults.value.length > 0 &&
+    matchedResults.value.every((result) => selection.isSelected(result.transactionId))
+);
+
+const amazonManualSourceItems = computed<ManualMatchBoardItem[]>(() =>
+  manualMatching.unmatchedSourceItems.value.map((order) => {
+    const lines = order.items.slice(0, 2).map((item) => `${item.quantity}x ${item.title}`);
+
+    if (order.items.length > 2) {
+      lines.push(t('common.labels.andMore', { count: order.items.length - 2 }));
+    }
+
+    return {
+      id: getAmazonOrderIdentity(order),
+      title: order.orderId,
+      subtitle: formatDate(order.orderDate),
+      amount: formatCurrency(order.totalAmount, order.currency),
+      chips: [
+        {
+          label: order.orderStatus,
+          color: order.orderStatus === 'Closed' ? 'success' : 'warning',
+        },
+      ],
+      lines,
+    };
+  })
+);
+
+const amazonManualTransactionItems = computed<ManualMatchBoardItem[]>(() =>
+  manualMatching.unmatchedTransactions.value.map((result) => {
+    const split = result.transaction;
+    const lines = [split.destination_name || split.source_name].filter(Boolean);
+
+    return {
+      id: result.transactionId,
+      title: split.description,
+      subtitle: formatDate(split.date),
+      amount: formatCurrency(parseFloat(split.amount), split.currency_code),
+      lines,
+    };
+  })
+);
+
+const amazonManualAssignments = computed<ManualMatchBoardAssignment[]>(() =>
+  manualMatching.manualMatches.value.map((result) => ({
+    id: result.transactionId,
+    sourceTitle: result.matchedOrder?.orderId || '',
+    sourceSubtitle: result.matchedOrder ? formatDate(result.matchedOrder.orderDate) : '',
+    transactionTitle: result.transaction.description,
+    transactionSubtitle: formatDate(result.transaction.date),
+  }))
+);
+
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1:
@@ -434,6 +551,8 @@ const nextButtonText = computed(() => {
       return t('common.steps.dateRange');
     case 2:
       return t('common.buttons.matchTransactions');
+    case 3:
+      return t('common.buttons.manualMatching');
     default:
       return t('common.buttons.next');
   }
@@ -441,15 +560,25 @@ const nextButtonText = computed(() => {
 
 const statusMessage = computed(() => {
   if (currentStep.value === 1) {
-    if (loadedOrders.value.length === 0) return '';
-    return t('views.amazon.ordersCount', { count: loadedOrders.value.length });
+    return loadedOrders.value.length > 0
+      ? t('views.amazon.ordersCount', { count: loadedOrders.value.length })
+      : '';
   }
+
   if (currentStep.value === 2) {
     if (preview.fetching.value) return t('common.messages.fetching');
     if (preview.count.value === null) return '';
     if (preview.count.value === 0) return t('common.messages.noTransactionsFound');
     return t('common.labels.countTransactions', { count: preview.count.value });
   }
+
+  if ((currentStep.value === 3 || currentStep.value === 4) && matchResults.value.length > 0) {
+    return t('views.amazon.foundMatches', {
+      matches: matchedCount.value,
+      total: matchResults.value.length,
+    });
+  }
+
   return '';
 });
 
@@ -457,14 +586,20 @@ const statusColor = computed(() => {
   if (currentStep.value === 1) {
     return loadedOrders.value.length > 0 ? 'success' : '';
   }
+
   if (currentStep.value === 2 && preview.count.value !== null) {
     return preview.count.value > 0 ? 'success' : 'warning';
   }
+
+  if ((currentStep.value === 3 || currentStep.value === 4) && matchResults.value.length > 0) {
+    return matchedCount.value > 0 ? 'success' : 'warning';
+  }
+
   return '';
 });
 
-// Debounce helper
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 function debouncedFetchTransactions() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
@@ -472,7 +607,6 @@ function debouncedFetchTransactions() {
   }, 500);
 }
 
-// Fetch transaction count (using composable with extra param)
 async function fetchTransactionCount() {
   await preview.fetchCount('/amazon/count-transactions', {
     startDate: startDate.value,
@@ -482,7 +616,6 @@ async function fetchTransactionCount() {
   });
 }
 
-// Load more transactions (using composable)
 async function loadMoreTransactions() {
   await preview.loadMore('/amazon/count-transactions', {
     startDate: startDate.value,
@@ -492,13 +625,11 @@ async function loadMoreTransactions() {
   });
 }
 
-// Upload orders using FormData (SEC-004: stream file to server instead of reading into memory)
 async function uploadOrders(fileOrFiles: File | File[] | null) {
   const file = Array.isArray(fileOrFiles) ? fileOrFiles[0] : fileOrFiles;
 
   if (!file) return;
 
-  // Validate file size before processing (SEC-005)
   const sizeValidation = validateFileSize(file);
   if (!sizeValidation.valid) {
     showSnackbar(sizeValidation.error!, 'error');
@@ -508,7 +639,6 @@ async function uploadOrders(fileOrFiles: File | File[] | null) {
   uploading.value = true;
 
   try {
-    // Use FormData to stream file directly to server (avoids memory issues with large files)
     const formData = new FormData();
     formData.append('file', file);
 
@@ -519,6 +649,7 @@ async function uploadOrders(fileOrFiles: File | File[] | null) {
     });
 
     loadedOrders.value = response.data.data.orders;
+    manualMatching.resetAll();
     showSnackbar(t('views.amazon.loadedOrders', { count: loadedOrders.value.length }), 'success');
   } catch (error) {
     console.error('Upload error:', error);
@@ -532,20 +663,16 @@ async function uploadOrders(fileOrFiles: File | File[] | null) {
   }
 }
 
-// Handle step navigation
 function onStepNext(step: number) {
   if (step === 2) {
-    // Entering step 2, fetch transactions if we have dates
     if (startDate.value || endDate.value) {
       fetchTransactionCount();
     }
   } else if (step === 3) {
-    // Auto-start matching when entering step 3
     matchTransactions();
   }
 }
 
-// Reset wizard
 async function onReset() {
   try {
     await api.delete('/amazon/orders');
@@ -565,14 +692,12 @@ async function onReset() {
   matching.value = false;
   hasMatched.value = false;
   matchResults.value = [];
+  manualMatching.resetAll();
   Object.keys(customDescriptions).forEach((key) => delete customDescriptions[key]);
   Object.keys(customNotes).forEach((key) => delete customNotes[key]);
 }
 
-// Stream processor
 const { processStream } = useStreamProcessor();
-
-// Track validation errors during stream processing
 const validationErrorCount = ref(0);
 
 function handleStreamEvent(
@@ -604,22 +729,20 @@ function handleStreamEvent(
       }
       break;
     }
-    case 'validation-error': {
+    case 'validation-error':
       validationErrorCount.value++;
       break;
-    }
     case 'error': {
       const errorData = event.data as { error: string };
       showSnackbar(errorData?.error || t('common.messages.somethingWentWrong'), 'error');
       break;
     }
     case 'complete':
-      progress.message.value = 'Complete!';
+      progress.message.value = t('common.messages.complete');
       break;
   }
 }
 
-// Match transactions
 async function matchTransactions() {
   matching.value = true;
   matchResults.value = [];
@@ -627,6 +750,9 @@ async function matchTransactions() {
   progress.reset();
   validationErrorCount.value = 0;
   progress.message.value = 'Connecting...';
+  manualMatching.resetSelections();
+  Object.keys(customDescriptions).forEach((key) => delete customDescriptions[key]);
+  Object.keys(customNotes).forEach((key) => delete customNotes[key]);
 
   try {
     await processStream(
@@ -641,15 +767,17 @@ async function matchTransactions() {
     );
 
     hasMatched.value = true;
-    const matchCount = matchResults.value.filter((m) => m.matchedOrder).length;
     if (validationErrorCount.value > 0) {
       showSnackbar(
         t('common.messages.itemsSkipped', { count: validationErrorCount.value }),
         'warning'
       );
-    } else if (matchCount > 0) {
+    } else if (matchedCount.value > 0) {
       showSnackbar(
-        t('views.amazon.foundMatches', { matches: matchCount, total: matchResults.value.length }),
+        t('views.amazon.foundMatches', {
+          matches: matchedCount.value,
+          total: matchResults.value.length,
+        }),
         'info'
       );
     }
@@ -663,24 +791,37 @@ async function matchTransactions() {
   }
 }
 
-// Selection toggle for all matches
 function toggleSelectAllMatches() {
-  const matchedIds = matchResults.value.filter((m) => m.matchedOrder).map((m) => m.transactionId);
-  selection.toggleAll(matchedIds);
+  selection.toggleAll(matchedResults.value.map((result) => result.transactionId));
 }
 
-// Apply selected matches
+function createAmazonManualMatch() {
+  const transactionId = manualMatching.createManualMatch();
+  if (!transactionId) {
+    return;
+  }
+
+  selection.toggle(transactionId, true);
+  showSnackbar(t('views.amazon.manualMatchCreated'), 'success');
+}
+
+function removeAmazonManualMatch(transactionId: string) {
+  manualMatching.removeManualMatch(transactionId);
+  selection.toggle(transactionId, false);
+  showSnackbar(t('views.amazon.manualMatchRemoved'), 'info');
+}
+
 async function applySelected() {
   applying.value = true;
 
   try {
     const matches = matchResults.value
-      .filter((r) => selection.isSelected(r.transactionId) && r.matchedOrder)
-      .map((r) => ({
-        transactionId: r.transactionId,
-        journalId: r.transaction.transaction_journal_id,
-        newDescription: customDescriptions[r.transactionId] || r.suggestedDescription,
-        newNotes: customNotes[r.transactionId] || r.suggestedNotes,
+      .filter((result) => selection.isSelected(result.transactionId) && result.matchedOrder)
+      .map((result) => ({
+        transactionId: result.transactionId,
+        journalId: result.transaction.transaction_journal_id,
+        newDescription: customDescriptions[result.transactionId] || result.suggestedDescription,
+        newNotes: customNotes[result.transactionId] || result.suggestedNotes,
       }));
 
     const response = await api.post('/amazon/apply', { matches });
@@ -694,8 +835,13 @@ async function applySelected() {
       result.failed.length > 0 ? 'warning' : 'success'
     );
 
+    manualMatching.markApplied(result.successful);
+    for (const transactionId of result.successful) {
+      delete customDescriptions[transactionId];
+      delete customNotes[transactionId];
+    }
     matchResults.value = matchResults.value.filter(
-      (r) => !result.successful.includes(r.transactionId)
+      (resultItem) => !result.successful.includes(resultItem.transactionId)
     );
     selection.clear();
   } catch (error) {
@@ -708,7 +854,6 @@ async function applySelected() {
   }
 }
 
-// Get breakdown items for the confidence breakdown component
 function getAmazonBreakdownItems(breakdown: AmazonConfidenceBreakdown): BreakdownItem[] {
   return [
     { label: t('views.amazon.breakdown.orderIdMatch'), value: breakdown.orderIdMatch, max: 0.5 },
@@ -797,5 +942,13 @@ function getAmazonBreakdownItems(breakdown: AmazonConfidenceBreakdown): Breakdow
 .cursor-help {
   cursor: help;
   border-bottom: 1px dotted rgba(var(--v-border-color), 0.5);
+}
+
+.manual-match-step {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

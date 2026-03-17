@@ -19,6 +19,7 @@ export {
 } from './useStreamProcessor';
 export { useConverter, type ConverterState, type ConverterActions } from './useConverter';
 export { useSnackbar, type SnackbarType } from './useSnackbar';
+export { useManualMatchAssignments, type ManualMatchAdapter } from './useManualMatchAssignments';
 export {
   useTransactionFilters,
   normalizeTransactionFilters,

@@ -8,6 +8,7 @@ import type {
   PayPalConfidenceBreakdown,
   BulkUpdateResult,
 } from '../../shared/types/app.js';
+import { createPayPalMatchResult } from '../../shared/utils/extenderMatching.js';
 
 const logger = createLogger('PayPalExtender');
 
@@ -476,20 +477,14 @@ export class PayPalExtender {
         }
       }
 
-      // Generate suggested description and notes
-      const { description: suggestedDescription, notes: suggestedNotes } = bestMatch
-        ? this.generateDescription(split.description, bestMatch)
-        : { description: split.description, notes: '' };
-
-      const result: PayPalMatchResult = {
+      const result: PayPalMatchResult = createPayPalMatchResult({
         transactionId: transaction.id,
         transaction: split,
         matchedPayPalTransaction: bestMatch,
         matchConfidence: bestConfidence,
         confidenceBreakdown: bestBreakdown,
-        suggestedDescription,
-        suggestedNotes,
-      };
+        matchMethod: 'automatic',
+      });
 
       yield { type: 'result', data: result };
     }
@@ -626,78 +621,6 @@ export class PayPalExtender {
     // Try standard parsing as fallback
     const date = new Date(dateStr);
     return isNaN(date.getTime()) ? null : date;
-  }
-
-  /**
-   * Generate description and notes for a matched transaction
-   */
-  private generateDescription(
-    _originalDescription: string,
-    ppTransaction: PayPalTransaction
-  ): { description: string; notes: string } {
-    const MAX_DESC_LENGTH = 50;
-
-    // Build short description
-    let shortDesc = ppTransaction.name || 'PayPal';
-    if (ppTransaction.itemDescription) {
-      const itemDesc =
-        ppTransaction.itemDescription.length > MAX_DESC_LENGTH
-          ? ppTransaction.itemDescription.substring(0, MAX_DESC_LENGTH - 3) + '...'
-          : ppTransaction.itemDescription;
-      shortDesc = `${ppTransaction.name}: ${itemDesc}`;
-    }
-
-    // Truncate if still too long
-    if (shortDesc.length > 100) {
-      shortDesc = shortDesc.substring(0, 97) + '...';
-    }
-
-    // Build detailed notes
-    const noteParts: string[] = [];
-
-    noteParts.push(`PayPal Transaction: ${ppTransaction.transactionCode}`);
-    noteParts.push(`Date: ${ppTransaction.date} ${ppTransaction.time}`);
-    noteParts.push(`Type: ${ppTransaction.type}`);
-    noteParts.push(`Name: ${ppTransaction.name}`);
-
-    if (ppTransaction.recipientEmail) {
-      noteParts.push(`Recipient: ${ppTransaction.recipientEmail}`);
-    }
-
-    if (ppTransaction.itemDescription) {
-      noteParts.push(`\nItem: ${ppTransaction.itemDescription}`);
-    }
-
-    if (ppTransaction.quantity && ppTransaction.quantity > 0) {
-      noteParts.push(`Quantity: ${ppTransaction.quantity}`);
-    }
-
-    noteParts.push(`\nGross: ${ppTransaction.gross.toFixed(2)} ${ppTransaction.currency}`);
-    if (ppTransaction.fee !== 0) {
-      noteParts.push(`Fee: ${ppTransaction.fee.toFixed(2)} ${ppTransaction.currency}`);
-    }
-    noteParts.push(`Net: ${ppTransaction.net.toFixed(2)} ${ppTransaction.currency}`);
-
-    if (ppTransaction.subject) {
-      noteParts.push(`\nSubject: ${ppTransaction.subject}`);
-    }
-
-    if (ppTransaction.note) {
-      noteParts.push(`Note: ${ppTransaction.note}`);
-    }
-
-    if (ppTransaction.invoiceNumber) {
-      noteParts.push(`Invoice: ${ppTransaction.invoiceNumber}`);
-    }
-
-    if (ppTransaction.orderNumber) {
-      noteParts.push(`Order: ${ppTransaction.orderNumber}`);
-    }
-
-    return {
-      description: shortDesc,
-      notes: noteParts.join('\n'),
-    };
   }
 
   /**

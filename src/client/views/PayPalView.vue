@@ -120,7 +120,7 @@
           :transactions="preview.transactions.value"
           :count="preview.count.value ?? 0"
           :loading="preview.fetching.value || preview.loadingMore.value"
-          loading-text="Fetching PayPal transactions..."
+          :loading-text="t('views.paypal.loadingText')"
           @change="debouncedFetchTransactions"
           @load-more="loadMoreTransactions"
         >
@@ -162,24 +162,21 @@
         <template v-else-if="matchResults.length > 0">
           <!-- Summary Card -->
           <ResultsSummaryCard
+            class="manual-match-summary"
             :stats="[
               {
                 icon: 'mdi-check',
-                label: t('common.labels.countMatches', {
-                  count: matchResults.filter((m) => m.matchedPayPalTransaction).length,
-                }),
+                label: t('common.labels.countMatches', { count: matchedCount }),
                 color: 'success',
               },
               {
                 icon: 'mdi-help',
-                label: t('common.labels.countUnmatched', {
-                  count: matchResults.filter((m) => !m.matchedPayPalTransaction).length,
-                }),
+                label: t('common.labels.countUnmatched', { count: unmatchedCount }),
                 color: 'grey',
               },
             ]"
-            :show-select-all="matchResults.filter((m) => m.matchedPayPalTransaction).length > 0"
-            :selectable-count="matchResults.filter((m) => m.matchedPayPalTransaction).length"
+            :show-select-all="matchedCount > 0"
+            :selectable-count="matchedCount"
             :all-selected="allMatchesSelected"
             :selected-count="selection.selected.value.length"
             :select-all-text="t('common.labels.selectAllMatches')"
@@ -229,97 +226,11 @@
                           )
                         }}
                       </div>
-                      <v-tooltip
+                      <ConfidenceBreakdown
                         v-if="result.matchedPayPalTransaction && result.confidenceBreakdown"
-                        location="left"
-                      >
-                        <template #activator="{ props }">
-                          <span v-bind="props">
-                            <ConfidenceChip
-                              :score="result.matchConfidence"
-                              class="cursor-pointer"
-                            />
-                          </span>
-                        </template>
-                        <div class="confidence-breakdown">
-                          <div class="font-weight-bold mb-1">
-                            {{ t('common.labels.confidenceBreakdown') }}
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.transactionCodeMatch > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{ t('views.paypal.confidenceBreakdown.transactionCode') }}</span>
-                            <span class="ml-3"
-                              >+{{
-                                Math.round(result.confidenceBreakdown.transactionCodeMatch * 100)
-                              }}%</span
-                            >
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.bankReferenceMatch > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{ t('views.paypal.confidenceBreakdown.bankReference') }}</span>
-                            <span class="ml-3"
-                              >+{{
-                                Math.round(result.confidenceBreakdown.bankReferenceMatch * 100)
-                              }}%</span
-                            >
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.amountMatch > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{ t('views.paypal.confidenceBreakdown.amountMatch') }}</span>
-                            <span class="ml-3"
-                              >+{{
-                                Math.round(result.confidenceBreakdown.amountMatch * 100)
-                              }}%</span
-                            >
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.exactAmountBonus > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{
-                              t('views.paypal.confidenceBreakdown.exactAmountBonus')
-                            }}</span>
-                            <span class="ml-3"
-                              >+{{
-                                Math.round(result.confidenceBreakdown.exactAmountBonus * 100)
-                              }}%</span
-                            >
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.dateProximity > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{ t('views.paypal.confidenceBreakdown.dateProximity') }}</span>
-                            <span class="ml-3"
-                              >+{{
-                                Math.round(result.confidenceBreakdown.dateProximity * 100)
-                              }}%</span
-                            >
-                          </div>
-                          <div
-                            v-if="result.confidenceBreakdown.nameMatch > 0"
-                            class="d-flex justify-space-between"
-                          >
-                            <span>{{ t('views.paypal.confidenceBreakdown.nameMatch') }}</span>
-                            <span class="ml-3"
-                              >+{{ Math.round(result.confidenceBreakdown.nameMatch * 100) }}%</span
-                            >
-                          </div>
-                          <v-divider class="my-1" />
-                          <div class="d-flex justify-space-between font-weight-bold">
-                            <span>{{ t('views.paypal.confidenceBreakdown.total') }}</span>
-                            <span class="ml-3"
-                              >{{ Math.round(result.matchConfidence * 100) }}%</span
-                            >
-                          </div>
-                        </div>
-                      </v-tooltip>
+                        :score="result.matchConfidence"
+                        :items="getPayPalBreakdownItems(result.confidenceBreakdown)"
+                      />
                       <ConfidenceChip
                         v-else-if="result.matchedPayPalTransaction"
                         :score="result.matchConfidence"
@@ -344,6 +255,15 @@
                       <span class="ml-2">{{
                         result.matchedPayPalTransaction.transactionCode
                       }}</span>
+                      <v-chip
+                        v-if="result.matchMethod === 'manual'"
+                        size="x-small"
+                        color="info"
+                        variant="tonal"
+                        class="ml-2"
+                      >
+                        {{ t('common.labels.manualMatch') }}
+                      </v-chip>
                     </v-alert>
 
                     <div class="text-subtitle-2 mb-2">{{ t('views.paypal.paypalDetails') }}:</div>
@@ -426,6 +346,35 @@
         </template>
       </template>
 
+      <template #content-4>
+        <div class="manual-match-step">
+          <ManualMatchBoard
+            :create-button-text="t('common.buttons.createManualMatch')"
+            :create-disabled="!manualMatching.canCreateManualMatch"
+            :source-title="t('views.paypal.unmatchedSourceTitle')"
+            :source-empty-title="t('views.paypal.unmatchedSourceEmptyTitle')"
+            :source-empty-subtitle="t('views.paypal.unmatchedSourceEmptySubtitle')"
+            :source-items="payPalManualSourceItems"
+            :selected-source-id="manualMatching.selectedSourceId.value"
+            :transaction-title="t('common.manualMatching.fireflyTransactionsTitle')"
+            :transaction-empty-title="t('common.manualMatching.fireflyTransactionsEmptyTitle')"
+            :transaction-empty-subtitle="
+              t('common.manualMatching.fireflyTransactionsEmptySubtitle')
+            "
+            :transaction-items="payPalManualTransactionItems"
+            :selected-transaction-id="manualMatching.selectedTransactionId.value"
+            :assignments-title="t('common.manualMatching.currentAssignmentsTitle')"
+            :assignments-empty-title="t('common.manualMatching.noAssignmentsTitle')"
+            :assignments="payPalManualAssignments"
+            :remove-button-text="t('common.buttons.removeManualMatch')"
+            @select-source="manualMatching.selectSource"
+            @select-transaction="manualMatching.selectTransaction"
+            @create-match="createPayPalManualMatch"
+            @remove-match="removePayPalManualMatch"
+          />
+        </div>
+      </template>
+
       <!-- Final Action Button (Match Transactions) -->
       <template #final-action>
         <FinalActionButton
@@ -447,35 +396,50 @@
 import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../services/api';
-import type { PayPalTransaction, PayPalMatchResult } from '@shared/types/app';
+import type {
+  PayPalConfidenceBreakdown,
+  PayPalMatchResult,
+  PayPalTransaction,
+} from '@shared/types/app';
+import {
+  MANUAL_MATCH_CONFIDENCE,
+  createPayPalMatchResult,
+  createPayPalUnmatchedResult,
+  getPayPalTransactionIdentity,
+} from '@shared/utils/extenderMatching';
 import {
   WizardStepper,
   ConfidenceChip,
+  ConfidenceBreakdown,
   EmptyState,
   DateRangeStep,
   ProgressCard,
   ResultsSummaryCard,
   FinalActionButton,
   FileUploadCard,
+  ManualMatchBoard,
 } from '../components/common';
+import type { BreakdownItem } from '../components/common/ConfidenceBreakdown.vue';
+import type {
+  ManualMatchBoardAssignment,
+  ManualMatchBoardItem,
+} from '../components/common/ManualMatchBoard.vue';
 import {
   useProgress,
   useSelection,
   useTransactionPreview,
   useStreamProcessor,
   useSnackbar,
+  useManualMatchAssignments,
   type StreamEvent,
   type ProgressData,
   type ValidationErrorData,
 } from '../composables';
 import { formatCurrency, formatDate, PayPalMatchResultSchema, validateFileSize } from '../utils';
 
-// Snackbar
 const { showSnackbar } = useSnackbar();
-
 const { t } = useI18n();
 
-// Wizard state
 const currentStep = ref(1);
 const wizardSteps = computed(() => [
   {
@@ -484,25 +448,22 @@ const wizardSteps = computed(() => [
   },
   { title: t('common.steps.dateRange'), subtitle: t('common.steps.selectTransactionsToMatch') },
   { title: t('common.steps.matchReview'), subtitle: t('common.steps.reviewAndApplyChanges') },
+  {
+    title: t('views.paypal.steps.manualMatch.title'),
+    subtitle: t('views.paypal.steps.manualMatch.subtitle'),
+  },
 ]);
 
-// Step 1: Upload state
 const uploadFile = ref<File[]>([]);
 const uploading = ref(false);
 const loadedTransactions = ref<PayPalTransaction[]>([]);
-
-// Preview first 10 transactions for table display
 const previewTransactions = computed(() => loadedTransactions.value.slice(0, 10));
 
-// Step 2: Date range state
 const startDate = ref<string>();
 const endDate = ref<string>();
 const excludeProcessed = ref(true);
-
-// Transaction preview composable
 const preview = useTransactionPreview();
 
-// Step 3: Matching state
 const matching = ref(false);
 const applying = ref(false);
 const hasMatched = ref(false);
@@ -510,20 +471,106 @@ const matchResults = ref<PayPalMatchResult[]>([]);
 const customDescriptions = reactive<Record<string, string>>({});
 const customNotes = reactive<Record<string, string>>({});
 
-// Progress tracking composable
 const progress = useProgress('Initializing...');
-
-// Selection composable
 const selection = useSelection<string>();
 
-const allMatchesSelected = computed(() => {
-  const matchedResults = matchResults.value.filter((m) => m.matchedPayPalTransaction);
-  return (
-    matchedResults.length > 0 && matchedResults.every((m) => selection.isSelected(m.transactionId))
-  );
+const matchedResults = computed(() =>
+  matchResults.value.filter((result) => result.matchedPayPalTransaction)
+);
+const unmatchedResults = computed(() =>
+  matchResults.value.filter((result) => !result.matchedPayPalTransaction)
+);
+const matchedCount = computed(() => matchedResults.value.length);
+const unmatchedCount = computed(() => unmatchedResults.value.length);
+
+const manualMatching = useManualMatchAssignments<PayPalTransaction, PayPalMatchResult>({
+  sourceItems: loadedTransactions,
+  matchResults,
+  customDescriptions,
+  customNotes,
+  adapter: {
+    getSourceId: getPayPalTransactionIdentity,
+    getMatchedSource: (result) => result.matchedPayPalTransaction,
+    isMatched: (result) => !!result.matchedPayPalTransaction,
+    isManualMatch: (result) => result.matchMethod === 'manual',
+    createManualResult: ({ transactionId, transaction, source }) =>
+      createPayPalMatchResult({
+        transactionId,
+        transaction,
+        matchedPayPalTransaction: source,
+        matchConfidence: MANUAL_MATCH_CONFIDENCE,
+        matchMethod: 'manual',
+      }),
+    createUnmatchedResult: ({ transactionId, transaction }) =>
+      createPayPalUnmatchedResult({
+        transactionId,
+        transaction,
+      }),
+  },
 });
 
-// Computed: Can proceed to next step
+const allMatchesSelected = computed(
+  () =>
+    matchedResults.value.length > 0 &&
+    matchedResults.value.every((result) => selection.isSelected(result.transactionId))
+);
+
+const payPalManualSourceItems = computed<ManualMatchBoardItem[]>(() =>
+  manualMatching.unmatchedSourceItems.value.map((transaction) => {
+    const lines = [
+      transaction.transactionCode || t('views.paypal.transactionCode'),
+      transaction.itemDescription,
+      transaction.recipientEmail,
+    ].filter(Boolean);
+
+    return {
+      id: getPayPalTransactionIdentity(transaction),
+      title: transaction.name || transaction.transactionCode || t('navigation.paypal'),
+      subtitle: [transaction.date, transaction.type].filter(Boolean).join(' • '),
+      amount: formatCurrency(transaction.gross, transaction.currency),
+      chips: [
+        {
+          label: transaction.status,
+          color: transaction.status === 'Abgeschlossen' ? 'success' : 'warning',
+        },
+      ],
+      lines,
+    };
+  })
+);
+
+const payPalManualTransactionItems = computed<ManualMatchBoardItem[]>(() =>
+  manualMatching.unmatchedTransactions.value.map((result) => {
+    const split = result.transaction;
+    const lines = [split.destination_name || split.source_name].filter(Boolean);
+
+    return {
+      id: result.transactionId,
+      title: split.description,
+      subtitle: formatDate(split.date),
+      amount: formatCurrency(parseFloat(split.amount), split.currency_code),
+      lines,
+    };
+  })
+);
+
+const payPalManualAssignments = computed<ManualMatchBoardAssignment[]>(() =>
+  manualMatching.manualMatches.value.map((result) => ({
+    id: result.transactionId,
+    sourceTitle:
+      result.matchedPayPalTransaction?.name ||
+      result.matchedPayPalTransaction?.transactionCode ||
+      '',
+    sourceSubtitle: result.matchedPayPalTransaction
+      ? [result.matchedPayPalTransaction.date, result.matchedPayPalTransaction.transactionCode]
+          .filter(Boolean)
+          .join(' • ')
+      : '',
+    transactionTitle: result.transaction.description,
+    transactionSubtitle: formatDate(result.transaction.date),
+  }))
+);
+
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 1:
@@ -552,6 +599,8 @@ const nextButtonText = computed(() => {
       return t('views.paypal.buttons.configureDateRange');
     case 2:
       return t('common.buttons.matchTransactions');
+    case 3:
+      return t('common.buttons.manualMatching');
     default:
       return t('common.buttons.next');
   }
@@ -559,15 +608,25 @@ const nextButtonText = computed(() => {
 
 const statusMessage = computed(() => {
   if (currentStep.value === 1) {
-    if (loadedTransactions.value.length === 0) return '';
-    return t('common.labels.countTransactionsLoaded', { count: loadedTransactions.value.length });
+    return loadedTransactions.value.length > 0
+      ? t('common.labels.countTransactionsLoaded', { count: loadedTransactions.value.length })
+      : '';
   }
+
   if (currentStep.value === 2) {
     if (preview.fetching.value) return t('common.messages.fetching');
     if (preview.count.value === null) return '';
     if (preview.count.value === 0) return t('common.messages.noTransactionsFound');
     return t('common.labels.countTransactions', { count: preview.count.value });
   }
+
+  if ((currentStep.value === 3 || currentStep.value === 4) && matchResults.value.length > 0) {
+    return t('views.paypal.messages.matchesFound', {
+      matches: matchedCount.value,
+      total: matchResults.value.length,
+    });
+  }
+
   return '';
 });
 
@@ -575,14 +634,20 @@ const statusColor = computed(() => {
   if (currentStep.value === 1) {
     return loadedTransactions.value.length > 0 ? 'success' : '';
   }
+
   if (currentStep.value === 2 && preview.count.value !== null) {
     return preview.count.value > 0 ? 'success' : 'warning';
   }
+
+  if ((currentStep.value === 3 || currentStep.value === 4) && matchResults.value.length > 0) {
+    return matchedCount.value > 0 ? 'success' : 'warning';
+  }
+
   return '';
 });
 
-// Debounce helper
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 function debouncedFetchTransactions() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
@@ -590,7 +655,6 @@ function debouncedFetchTransactions() {
   }, 500);
 }
 
-// Fetch transaction count for current date range
 async function fetchTransactionCount() {
   await preview.fetchCount('/paypal/count-transactions', {
     startDate: startDate.value,
@@ -600,7 +664,6 @@ async function fetchTransactionCount() {
   });
 }
 
-// Load more transactions (pagination)
 async function loadMoreTransactions() {
   await preview.loadMore('/paypal/count-transactions', {
     startDate: startDate.value,
@@ -609,13 +672,11 @@ async function loadMoreTransactions() {
   });
 }
 
-// Upload transactions using FormData (SEC-004: stream file to server instead of reading into memory)
 async function uploadTransactions(fileOrFiles: File | File[] | null) {
   const file = Array.isArray(fileOrFiles) ? fileOrFiles[0] : fileOrFiles;
 
   if (!file) return;
 
-  // Validate file size before processing (SEC-005)
   const sizeValidation = validateFileSize(file);
   if (!sizeValidation.valid) {
     showSnackbar(sizeValidation.error!, 'error');
@@ -625,7 +686,6 @@ async function uploadTransactions(fileOrFiles: File | File[] | null) {
   uploading.value = true;
 
   try {
-    // Use FormData to stream file directly to server (avoids memory issues with large files)
     const formData = new FormData();
     formData.append('file', file);
 
@@ -636,6 +696,7 @@ async function uploadTransactions(fileOrFiles: File | File[] | null) {
     });
 
     loadedTransactions.value = response.data.data.transactions;
+    manualMatching.resetAll();
     showSnackbar(
       t('views.paypal.messages.transactionsLoaded', { count: loadedTransactions.value.length }),
       'success'
@@ -652,19 +713,16 @@ async function uploadTransactions(fileOrFiles: File | File[] | null) {
   }
 }
 
-// Handle step navigation
 function onStepNext(step: number) {
   if (step === 2) {
     if (startDate.value || endDate.value) {
       fetchTransactionCount();
     }
   } else if (step === 3) {
-    // Auto-start matching when entering step 3
     matchTransactions();
   }
 }
 
-// Reset wizard
 async function onReset() {
   try {
     await api.delete('/paypal/transactions');
@@ -684,14 +742,12 @@ async function onReset() {
   matching.value = false;
   hasMatched.value = false;
   matchResults.value = [];
+  manualMatching.resetAll();
   Object.keys(customDescriptions).forEach((key) => delete customDescriptions[key]);
   Object.keys(customNotes).forEach((key) => delete customNotes[key]);
 }
 
-// Stream processor
 const { processStream } = useStreamProcessor();
-
-// Track validation errors during stream processing
 const validationErrorCount = ref(0);
 
 function handleStreamEvent(
@@ -721,10 +777,9 @@ function handleStreamEvent(
       }
       break;
     }
-    case 'validation-error': {
+    case 'validation-error':
       validationErrorCount.value++;
       break;
-    }
     case 'error': {
       const errorData = event.data as { error: string };
       showSnackbar(errorData?.error || t('common.errors.anErrorOccurred'), 'error');
@@ -736,7 +791,6 @@ function handleStreamEvent(
   }
 }
 
-// Match transactions
 async function matchTransactions() {
   matching.value = true;
   matchResults.value = [];
@@ -744,6 +798,9 @@ async function matchTransactions() {
   progress.reset();
   validationErrorCount.value = 0;
   progress.message.value = 'Connecting...';
+  manualMatching.resetSelections();
+  Object.keys(customDescriptions).forEach((key) => delete customDescriptions[key]);
+  Object.keys(customNotes).forEach((key) => delete customNotes[key]);
 
   try {
     await processStream(
@@ -758,16 +815,15 @@ async function matchTransactions() {
     );
 
     hasMatched.value = true;
-    const matchCount = matchResults.value.filter((m) => m.matchedPayPalTransaction).length;
     if (validationErrorCount.value > 0) {
       showSnackbar(
         t('common.messages.itemsSkipped', { count: validationErrorCount.value }),
         'warning'
       );
-    } else if (matchCount > 0) {
+    } else if (matchedCount.value > 0) {
       showSnackbar(
         t('views.paypal.messages.matchesFound', {
-          matches: matchCount,
+          matches: matchedCount.value,
           total: matchResults.value.length,
         }),
         'info'
@@ -783,30 +839,39 @@ async function matchTransactions() {
   }
 }
 
-// Toggle select all matches
 function toggleSelectAllMatches() {
-  const matchedIds = matchResults.value
-    .filter((m) => m.matchedPayPalTransaction)
-    .map((m) => m.transactionId);
-  if (allMatchesSelected.value) {
-    selection.deselectAll();
-  } else {
-    selection.selectAll(matchedIds);
-  }
+  selection.toggleAll(matchedResults.value.map((result) => result.transactionId));
 }
 
-// Apply selected matches
+function createPayPalManualMatch() {
+  const transactionId = manualMatching.createManualMatch();
+  if (!transactionId) {
+    return;
+  }
+
+  selection.toggle(transactionId, true);
+  showSnackbar(t('views.paypal.messages.manualMatchCreated'), 'success');
+}
+
+function removePayPalManualMatch(transactionId: string) {
+  manualMatching.removeManualMatch(transactionId);
+  selection.toggle(transactionId, false);
+  showSnackbar(t('views.paypal.messages.manualMatchRemoved'), 'info');
+}
+
 async function applySelected() {
   applying.value = true;
 
   try {
     const matches = matchResults.value
-      .filter((r) => selection.isSelected(r.transactionId) && r.matchedPayPalTransaction)
-      .map((r) => ({
-        transactionId: r.transactionId,
-        journalId: r.transaction.transaction_journal_id,
-        newDescription: customDescriptions[r.transactionId] || r.suggestedDescription,
-        newNotes: customNotes[r.transactionId] || r.suggestedNotes,
+      .filter(
+        (result) => selection.isSelected(result.transactionId) && result.matchedPayPalTransaction
+      )
+      .map((result) => ({
+        transactionId: result.transactionId,
+        journalId: result.transaction.transaction_journal_id,
+        newDescription: customDescriptions[result.transactionId] || result.suggestedDescription,
+        newNotes: customNotes[result.transactionId] || result.suggestedNotes,
       }));
 
     const response = await api.post('/paypal/apply', { matches });
@@ -822,8 +887,13 @@ async function applySelected() {
       result.failed.length > 0 ? 'warning' : 'success'
     );
 
+    manualMatching.markApplied(result.successful);
+    for (const transactionId of result.successful) {
+      delete customDescriptions[transactionId];
+      delete customNotes[transactionId];
+    }
     matchResults.value = matchResults.value.filter(
-      (r) => !result.successful.includes(r.transactionId)
+      (resultItem) => !result.successful.includes(resultItem.transactionId)
     );
     selection.clear();
   } catch (error) {
@@ -834,6 +904,41 @@ async function applySelected() {
   } finally {
     applying.value = false;
   }
+}
+
+function getPayPalBreakdownItems(breakdown: PayPalConfidenceBreakdown): BreakdownItem[] {
+  return [
+    {
+      label: t('views.paypal.confidenceBreakdown.transactionCode'),
+      value: breakdown.transactionCodeMatch,
+      max: 0.7,
+    },
+    {
+      label: t('views.paypal.confidenceBreakdown.bankReference'),
+      value: breakdown.bankReferenceMatch,
+      max: 0.7,
+    },
+    {
+      label: t('views.paypal.confidenceBreakdown.amountMatch'),
+      value: breakdown.amountMatch,
+      max: 0.3,
+    },
+    {
+      label: t('views.paypal.confidenceBreakdown.exactAmountBonus'),
+      value: breakdown.exactAmountBonus,
+      max: 0.1,
+    },
+    {
+      label: t('views.paypal.confidenceBreakdown.dateProximity'),
+      value: breakdown.dateProximity,
+      max: 0.1,
+    },
+    {
+      label: t('views.paypal.confidenceBreakdown.nameMatch'),
+      value: breakdown.nameMatch,
+      max: 0.05,
+    },
+  ];
 }
 </script>
 
@@ -914,5 +1019,13 @@ async function applySelected() {
 
 .preview-table td {
   max-width: 200px;
+}
+
+.manual-match-step {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

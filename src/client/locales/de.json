@@ -43,7 +43,10 @@
       "howToUse": "Anleitung",
       "exportCSV": "CSV exportieren",
       "downloadCSV": "CSV herunterladen",
-      "confirmImport": "Import bestätigen"
+      "confirmImport": "Import bestätigen",
+      "manualMatching": "Manuelle Zuordnung",
+      "createManualMatch": "Manuelle Zuordnung erstellen",
+      "removeManualMatch": "Manuelle Zuordnung entfernen"
     },
     "labels": {
       "username": "Benutzername",
@@ -118,7 +121,9 @@
       "rules": "Regeln",
       "readyToImportCount": "Bereit zum Importieren von {count} Transaktionen",
       "rowError": "Zeile {row}: {message}",
-      "enterTan": "TAN eingeben"
+      "enterTan": "TAN eingeben",
+      "search": "Suchen",
+      "manualMatch": "Manuelle Zuordnung"
     },
     "messages": {
       "fetching": "Wird abgerufen...",
@@ -142,7 +147,16 @@
       "connectToBankToPreview": "Verbinden Sie sich mit Ihrer Bank und rufen Sie Transaktionen ab, um eine Vorschau zu sehen",
       "waitingForConfirmation": "Warte auf Bestätigung",
       "pleaseConfirmInBankingApp": "Bitte bestätigen Sie in Ihrer Banking-App",
-      "processing": "Wird verarbeitet..."
+      "processing": "Wird verarbeitet...",
+      "noSearchResults": "Keine passenden Einträge gefunden",
+      "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff."
+    },
+    "manualMatching": {
+      "fireflyTransactionsTitle": "Nicht zugeordnete Firefly-Transaktionen",
+      "fireflyTransactionsEmptyTitle": "Keine nicht zugeordneten Firefly-Transaktionen mehr",
+      "fireflyTransactionsEmptySubtitle": "Alles ist bereits zugeordnet oder wurde schon angewendet.",
+      "currentAssignmentsTitle": "Aktuelle manuelle Zuordnungen",
+      "noAssignmentsTitle": "Noch keine manuellen Zuordnungen"
     },
     "status": {
       "connected": "Verbunden",
@@ -405,6 +419,10 @@
         "uploadOrders": {
           "title": "Bestellungen hochladen",
           "subtitle": "Amazon-Bestelldaten laden"
+        },
+        "manualMatch": {
+          "title": "Manuelle Bestellzuordnung",
+          "subtitle": "Nicht zugeordnete Bestellungen und Transaktionen verknüpfen"
         }
       },
       "uploadTitle": "Amazon-Bestellungen JSON hochladen",
@@ -428,6 +446,11 @@
       "failedToUpload": "Fehler beim Hochladen von Bestellungen",
       "foundMatches": "{matches} Übereinstimmung(en) von {total} Transaktion(en) gefunden",
       "updatedDescriptions": "{successful} Beschreibung(en) aktualisiert",
+      "manualMatchCreated": "Manuelle Amazon-Zuordnung erstellt",
+      "manualMatchRemoved": "Manuelle Amazon-Zuordnung entfernt",
+      "unmatchedSourceTitle": "Nicht zugeordnete Amazon-Bestellungen",
+      "unmatchedSourceEmptyTitle": "Keine nicht zugeordneten Amazon-Bestellungen mehr",
+      "unmatchedSourceEmptySubtitle": "Alle hochgeladenen Bestellungen sind bereits zugeordnet oder wurden schon angewendet.",
       "breakdown": {
         "orderIdMatch": "Bestell-ID-Übereinstimmung",
         "itemTitleMatch": "Artikeltitel-Übereinstimmung"
@@ -438,6 +461,10 @@
         "uploadActivity": {
           "title": "Aktivität hochladen",
           "subtitle": "PayPal-Aktivitätsdaten laden"
+        },
+        "manualMatch": {
+          "title": "Manuelle PayPal-Zuordnung",
+          "subtitle": "Nicht zugeordnete PayPal-Datensätze und Transaktionen verknüpfen"
         }
       },
       "uploadTitle": "PayPal-Aktivitätsbericht hochladen",
@@ -466,11 +493,16 @@
         "failedToUpload": "Fehler beim Hochladen von Transaktionen",
         "matchesFound": "{matches} Übereinstimmungen von {total} Transaktionen gefunden",
         "descriptionsUpdated": "{successful} Beschreibungen aktualisiert",
-        "descriptionsUpdatedWithFailed": "{successful} Beschreibungen aktualisiert, {failed} fehlgeschlagen"
+        "descriptionsUpdatedWithFailed": "{successful} Beschreibungen aktualisiert, {failed} fehlgeschlagen",
+        "manualMatchCreated": "Manuelle PayPal-Zuordnung erstellt",
+        "manualMatchRemoved": "Manuelle PayPal-Zuordnung entfernt"
       },
       "buttons": {
         "configureDateRange": "Datumsbereich konfigurieren"
-      }
+      },
+      "unmatchedSourceTitle": "Nicht zugeordnete PayPal-Datensätze",
+      "unmatchedSourceEmptyTitle": "Keine nicht zugeordneten PayPal-Datensätze mehr",
+      "unmatchedSourceEmptySubtitle": "Alle hochgeladenen PayPal-Datensätze sind bereits zugeordnet oder wurden schon angewendet."
     },
     "converter": {
       "uploadTitle": "Bank-Export-CSV",
