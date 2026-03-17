@@ -4,12 +4,7 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { getFinTSClientStore, getFinTSDialogStateStore } from '../services/index.js';
 import { isFireflyConfigured, isFinTSConfigured, config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
-import {
-  asyncHandler,
-  badRequest,
-  getPersistedSessionId,
-  setupSSE,
-} from '../middleware/index.js';
+import { asyncHandler, badRequest, getPersistedSessionId, setupSSE } from '../middleware/index.js';
 import {
   validateBody,
   fintsConnectSchema,

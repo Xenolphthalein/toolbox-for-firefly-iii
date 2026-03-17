@@ -2,12 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getFireflyApi } from '../clients/firefly.js';
 import { SubscriptionFinder } from '../services/subscriptionFinder.js';
 import { isFireflyConfigured } from '../config/index.js';
-import {
-  getPersistedSessionId,
-  asyncHandler,
-  badRequest,
-  setupSSE,
-} from '../middleware/index.js';
+import { getPersistedSessionId, asyncHandler, badRequest, setupSSE } from '../middleware/index.js';
 import { createLogger } from '../utils/logger.js';
 import {
   getCacheKey,
