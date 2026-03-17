@@ -865,7 +865,9 @@ async function applySelected() {
 
   try {
     const matches = matchResults.value
-      .filter((result) => selection.isSelected(result.transactionId) && result.matchedPayPalTransaction)
+      .filter(
+        (result) => selection.isSelected(result.transactionId) && result.matchedPayPalTransaction
+      )
       .map((result) => ({
         transactionId: result.transactionId,
         journalId: result.transaction.transaction_journal_id,

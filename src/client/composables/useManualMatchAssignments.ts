@@ -78,7 +78,9 @@ export function useManualMatchAssignments<SourceItem, MatchResult extends MatchR
   });
 
   const unmatchedSourceItems = computed(() =>
-    sourceItems.value.filter((source) => !unavailableSourceIdSet.value.has(adapter.getSourceId(source)))
+    sourceItems.value.filter(
+      (source) => !unavailableSourceIdSet.value.has(adapter.getSourceId(source))
+    )
   );
 
   const manualMatches = computed(() =>

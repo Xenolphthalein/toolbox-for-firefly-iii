@@ -477,9 +477,7 @@ const allMatchesSelected = computed(
 
 const amazonManualSourceItems = computed<ManualMatchBoardItem[]>(() =>
   manualMatching.unmatchedSourceItems.value.map((order) => {
-    const lines = order.items
-      .slice(0, 2)
-      .map((item) => `${item.quantity}x ${item.title}`);
+    const lines = order.items.slice(0, 2).map((item) => `${item.quantity}x ${item.title}`);
 
     if (order.items.length > 2) {
       lines.push(t('common.labels.andMore', { count: order.items.length - 2 }));

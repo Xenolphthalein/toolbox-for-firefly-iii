@@ -240,7 +240,9 @@
     </div>
 
     <v-card rounded="lg" class="manual-match-assignments-card">
-      <v-card-title class="manual-match-assignments-title d-flex align-center justify-space-between">
+      <v-card-title
+        class="manual-match-assignments-title d-flex align-center justify-space-between"
+      >
         <span>{{ assignmentsTitle }}</span>
         <v-chip size="small" color="info" variant="tonal">
           {{ assignments.length }}
@@ -268,10 +270,7 @@
                 </div>
                 <div class="text-body-2 text-medium-emphasis my-1">→</div>
                 <div class="text-body-2 font-weight-medium">{{ assignment.transactionTitle }}</div>
-                <div
-                  v-if="assignment.transactionSubtitle"
-                  class="text-body-2 text-medium-emphasis"
-                >
+                <div v-if="assignment.transactionSubtitle" class="text-body-2 text-medium-emphasis">
                   {{ assignment.transactionSubtitle }}
                 </div>
               </div>
