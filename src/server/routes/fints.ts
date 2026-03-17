@@ -4,7 +4,12 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { getFinTSClientStore, getFinTSDialogStateStore } from '../services/index.js';
 import { isFireflyConfigured, isFinTSConfigured, config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
-import { asyncHandler, badRequest, getSessionId, setupSSE } from '../middleware/index.js';
+import {
+  asyncHandler,
+  badRequest,
+  getPersistedSessionId,
+  setupSSE,
+} from '../middleware/index.js';
 import {
   validateBody,
   fintsConnectSchema,
@@ -91,7 +96,7 @@ router.post(
   '/connect',
   validateBody(fintsConnectSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const clientConfig = req.body as FinTSConnectBody;
 
     logger.info(`Connection request for bank ${clientConfig.bankCode} (session: ${sessionId})`);
@@ -133,7 +138,7 @@ router.post(
   '/submit-tan',
   validateBody(fintsSubmitTanSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const { tan, orderRef } = req.body as FinTSSubmitTanBody;
 
     logger.info(`TAN submission for session ${sessionId}`);
@@ -163,7 +168,7 @@ router.post(
 router.post(
   '/poll-tan',
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const { orderRef } = req.body;
 
     logger.info(`Polling TAN status for session ${sessionId}`);
@@ -194,7 +199,7 @@ router.post(
   '/fetch',
   validateBody(fintsFetchSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const { account, startDate, endDate } = req.body as FinTSFetchBody;
 
     logger.info(`Fetch request for session ${sessionId}: ${startDate} to ${endDate}`);
@@ -229,7 +234,7 @@ router.post(
   '/stream-fetch',
   validateBody(fintsFetchSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const { account, startDate, endDate } = req.body as FinTSFetchBody;
 
     logger.info(`Fetch request for session ${sessionId}: ${startDate} to ${endDate}`);
@@ -384,7 +389,7 @@ router.post(
 router.post(
   '/disconnect',
   asyncHandler(async (req: Request, res: Response) => {
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     logger.info(`Disconnect request for session ${sessionId}`);
     await clearClient(sessionId);
 

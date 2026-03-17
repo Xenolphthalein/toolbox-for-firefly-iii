@@ -2,7 +2,12 @@ import { Router, Request, Response } from 'express';
 import { getFireflyApi } from '../clients/firefly.js';
 import { SubscriptionFinder } from '../services/subscriptionFinder.js';
 import { isFireflyConfigured } from '../config/index.js';
-import { getSessionId, asyncHandler, badRequest, setupSSE } from '../middleware/index.js';
+import {
+  getPersistedSessionId,
+  asyncHandler,
+  badRequest,
+  setupSSE,
+} from '../middleware/index.js';
 import { createLogger } from '../utils/logger.js';
 import {
   getCacheKey,
@@ -41,7 +46,7 @@ router.post(
   validateBody(subscriptionFindSchema),
   async (req: Request, res: Response) => {
     const { startDate, endDate, options } = req.body as SubscriptionFindBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const cacheKey = getCacheKey(startDate, endDate);
 
     logger.debug(`Stream find subscriptions started`, { startDate, endDate, options });
@@ -156,7 +161,7 @@ router.post(
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, limit, offset } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const cacheKey = getCacheKey(startDate, endDate);
 
     const fireflyApi = getFireflyApi();
