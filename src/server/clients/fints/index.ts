@@ -17,8 +17,8 @@
  * - phpFinTS for reference: https://github.com/nemiah/phpFinTS
  */
 
-// Re-export main client class
-export { FinTSClient } from './client.js';
+// Re-export main client class and errors
+export { FinTSClient, FinTSAuthError } from './client.js';
 
 // Re-export constants
 export { FINTS_VERSION, PRODUCT_ID, DIALOG_LANGUAGE, KNOWN_BANKS } from './constants.js';

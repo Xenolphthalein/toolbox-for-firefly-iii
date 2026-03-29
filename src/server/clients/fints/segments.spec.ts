@@ -6,6 +6,7 @@ import {
   buildHKIDN,
   buildHKVVB,
   buildHKEND,
+  buildHKSYN,
   buildHNSHA,
   buildHNSHK,
   buildHKSPA,
@@ -107,6 +108,28 @@ describe('FinTS segments', () => {
     it('should build dialog end segment', () => {
       const result = buildHKEND(4, 'DIALOG123');
       expect(result).toBe("HKEND:4:1+DIALOG123'");
+    });
+  });
+
+  describe('buildHKSYN', () => {
+    it('should build synchronization segment with mode 0 (new Kundensystem-ID)', () => {
+      const result = buildHKSYN(5, 0);
+      expect(result).toBe("HKSYN:5:3+0'");
+    });
+
+    it('should build synchronization segment with mode 1 (last message number)', () => {
+      const result = buildHKSYN(5, 1);
+      expect(result).toBe("HKSYN:5:3+1'");
+    });
+
+    it('should build synchronization segment with mode 2 (signature ID)', () => {
+      const result = buildHKSYN(5, 2);
+      expect(result).toBe("HKSYN:5:3+2'");
+    });
+
+    it('should default to mode 0', () => {
+      const result = buildHKSYN(3);
+      expect(result).toBe("HKSYN:3:3+0'");
     });
   });
 

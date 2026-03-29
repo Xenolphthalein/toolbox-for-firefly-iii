@@ -1,11 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   checkForErrors,
+  extractErrors,
   extractDialogId,
   extractAccounts,
   extractTanMethods,
   extractAllowedTanMethods,
   checkTanRequired,
+  extractWarnings,
+  checkForCriticalWarnings,
+  checkSyncRequired,
+  extractSystemId,
 } from './extractors.js';
 
 // Mock the utils logger
@@ -19,6 +24,114 @@ vi.mock('./utils.js', () => ({
 }));
 
 describe('FinTS extractors', () => {
+  describe('extractWarnings', () => {
+    it('should extract warnings from HIRMG segments', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+3060::Bitte beachten Sie die enthaltenen Warnungen.']);
+
+      const warnings = extractWarnings(segments);
+      expect(warnings.length).toBe(1);
+      expect(warnings[0].code).toBe(3060);
+      expect(warnings[0].message).toContain('Bitte beachten');
+    });
+
+    it('should extract multiple warnings', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', [
+        'HIRMS:4:2:4+3050::BPD nicht mehr aktuell.+3938::Ihr Zugang ist vorläufig gesperrt.+3920::Zugelassene TAN-Verfahren:923',
+      ]);
+
+      const warnings = extractWarnings(segments);
+      expect(warnings.length).toBe(3);
+      expect(warnings.map((w) => w.code)).toContain(3050);
+      expect(warnings.map((w) => w.code)).toContain(3938);
+      expect(warnings.map((w) => w.code)).toContain(3920);
+    });
+
+    it('should return empty array when no warnings', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+0010::Success']);
+
+      const warnings = extractWarnings(segments);
+      expect(warnings.length).toBe(0);
+    });
+  });
+
+  describe('checkForCriticalWarnings', () => {
+    it('should detect account locked warning (3938)', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:4:2:4+3938::Ihr Zugang ist vorläufig gesperrt.']);
+
+      const critical = checkForCriticalWarnings(segments);
+      expect(critical).not.toBeNull();
+      expect(critical?.code).toBe(3938);
+    });
+
+    it('should detect PIN wrong warning (3916)', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:4:2:4+3916::PIN falsch.']);
+
+      const critical = checkForCriticalWarnings(segments);
+      expect(critical).not.toBeNull();
+      expect(critical?.code).toBe(3916);
+    });
+
+    it('should return null for non-critical warnings', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:4:2:4+3050::BPD nicht mehr aktuell.']);
+
+      const critical = checkForCriticalWarnings(segments);
+      expect(critical).toBeNull();
+    });
+
+    it('should return null when no warnings', () => {
+      const segments = new Map<string, string[]>();
+
+      const critical = checkForCriticalWarnings(segments);
+      expect(critical).toBeNull();
+    });
+  });
+
+  describe('extractErrors', () => {
+    it('should extract errors from HIRMG segments', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+9050::Die Nachricht enthält Fehler.']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(1);
+      expect(errors[0].code).toBe(9050);
+      expect(errors[0].message).toContain('Fehler');
+    });
+
+    it('should extract multiple errors', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', [
+        'HIRMS:4:2:4+9010::PIN/TAN Prüfung fehlgeschlagen+9931::Anmeldename oder PIN ist falsch.',
+      ]);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(2);
+      expect(errors.map((e) => e.code)).toContain(9010);
+      expect(errors.map((e) => e.code)).toContain(9931);
+    });
+
+    it('should return empty array when no errors', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+0010::Success']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(0);
+    });
+
+    it('should not include warnings (3xxx codes)', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:4:2:4+3920::Zugelassene TAN-Verfahren:923']);
+
+      const errors = extractErrors(segments);
+      expect(errors.length).toBe(0);
+    });
+  });
+
   describe('checkForErrors', () => {
     it('should not throw for successful responses (0xxx codes)', () => {
       const segments = new Map<string, string[]>();
@@ -45,7 +158,8 @@ describe('FinTS extractors', () => {
       const segments = new Map<string, string[]>();
       segments.set('HIRMS', ['HIRMS:3:2+9010::Invalid PIN']);
 
-      expect(() => checkForErrors(segments)).toThrow('FinTS Error 9010');
+      // 9010 is an auth error, so it throws with AUTH_ERROR prefix
+      expect(() => checkForErrors(segments)).toThrow('AUTH_ERROR:9010:Invalid PIN');
     });
 
     it('should check both HIRMG and HIRMS', () => {
@@ -74,6 +188,83 @@ describe('FinTS extractors', () => {
       segments.set('HIRMG', ['HIRMG:2:2+8999::Not an error']);
 
       expect(() => checkForErrors(segments)).not.toThrow();
+    });
+  });
+
+  describe('checkSyncRequired', () => {
+    it('should return true when 9391 error is present', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+9391::Kundensystem-ID ungültig']);
+
+      expect(checkSyncRequired(segments)).toBe(true);
+    });
+
+    it('should return false when no 9391 error', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+9010::Invalid PIN']);
+
+      expect(checkSyncRequired(segments)).toBe(false);
+    });
+
+    it('should return false for empty segments', () => {
+      const segments = new Map<string, string[]>();
+
+      expect(checkSyncRequired(segments)).toBe(false);
+    });
+
+    it('should detect 9391 in HIRMG as well', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMG', ['HIRMG:2:2+9391::Kundensystem-ID erforderlich']);
+
+      expect(checkSyncRequired(segments)).toBe(true);
+    });
+  });
+
+  describe('extractSystemId', () => {
+    it('should extract system ID from HISYN segment', () => {
+      const segments = new Map<string, string[]>();
+      // HISYN segment format: HISYN:<seg>:<ver>:<refSeg>+<kundensystemID>+<nachrichtennummer>+<signaturID>
+      // After extractElements, elements[0] = ':refSeg' or kundensystemID depending on format
+      segments.set('HISYN', ['HISYN:4:4+123456789+1+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBe('123456789');
+    });
+
+    it('should extract alphanumeric system ID', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HISYN', ['HISYN:4:4+ABC123DEF456+0+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBe('ABC123DEF456');
+    });
+
+    it('should return null when no HISYN segment', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', ['HIRMS:3:2+0010::OK']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBeNull();
+    });
+
+    it('should return null for system ID of 0', () => {
+      const segments = new Map<string, string[]>();
+      // If the bank returns '0' as system ID, it means not set
+      segments.set('HISYN', ['HISYN:4:4+0+0+0']);
+
+      const systemId = extractSystemId(segments);
+      expect(systemId).toBeNull();
+    });
+
+    it('should handle HISYN with segment reference', () => {
+      const segments = new Map<string, string[]>();
+      // Some banks include reference segment: HISYN:4:4:5+...
+      // extractElements will return [':5', 'systemId', ...]
+      segments.set('HISYN', ['HISYN:4:4:5+SYSID12345+1+0']);
+
+      const systemId = extractSystemId(segments);
+      // Should skip the :5 reference and find the actual system ID
+      expect(systemId).toBe('SYSID12345');
     });
   });
 
@@ -212,17 +403,115 @@ describe('FinTS extractors', () => {
         expect(chipTan.technicalName).toContain('HHD');
       }
     });
+
+    it('should only match TAN method IDs in 900-997 range', () => {
+      // This tests the fix for issue #25 where numbers like 180 were incorrectly
+      // matched as TAN method IDs
+      const segments = new Map<string, string[]>();
+      // Simulate HITANS with various numeric fields that should NOT be matched as TAN methods
+      segments.set('HITANS', [
+        'HITANS:70:6:4+1+1+0+N:N:0:910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:180:5:SomeField:::NotATanMethod',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      // Should find 910 but not 180
+      expect(methods.find((m) => m.id === '910')).toBeDefined();
+      expect(methods.find((m) => m.id === '180')).toBeUndefined();
+    });
+
+    it('should correctly parse pushTAN 2.0 (method 922/923)', () => {
+      // Test for Kreissparkasse-style banks that use 922/923 for pushTAN 2.0
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:70:6:4+1+1+0+N:N:0:922:2:pushTAN2:::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:0:N:1:923:2:pushTAN2:DecoupledPush::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.find((m) => m.id === '922')).toBeDefined();
+      expect(methods.find((m) => m.id === '923')).toBeDefined();
+    });
+
+    it('should parse multiple TAN methods from Sparkasse-style banks', () => {
+      // Real-world like HITANS from Sparkasse with multiple TAN methods
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:166:6:4+1+1+0+J:N:0:910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:911:2:HHD1.3.2OPT:HHDOPT1:1.3.2:chipTAN optisch:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:912:2:HHD1.3.2USB:HHDUSB1:1.3.2:chipTAN-USB:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:913:2:Q1S:Secoder_UC:1.2.0:chipTAN-QR:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1:920:2:smsTAN:::smsTAN:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:921:2:pushTAN:::pushTAN:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:922:2:pushTAN2:::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1:923:2:pushTAN2:DecoupledPush::pushTAN 2.0:6:1:TAN:3:J:2:N:0:0:N:N:00:2:N:1',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.length).toBe(8);
+      expect(methods.map((m) => m.id).sort()).toEqual([
+        '910',
+        '911',
+        '912',
+        '913',
+        '920',
+        '921',
+        '922',
+        '923',
+      ]);
+
+      // Verify names are correctly extracted
+      const chipTanManuell = methods.find((m) => m.id === '910');
+      expect(chipTanManuell?.name).toBe('chipTAN manuell');
+
+      const pushTan20 = methods.find((m) => m.id === '923');
+      expect(pushTan20?.name).toBe('pushTAN 2.0');
+    });
+
+    it('should identify decoupled TAN methods by dkTanVerfahren field', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', [
+        'HITANS:70:7:4+1+1+0+J:N:0:923:2:pushTAN2:DecoupledPush::pushTAN 2.0',
+      ]);
+
+      const methods = extractTanMethods(segments);
+      const pushTan = methods.find((m) => m.id === '923');
+      expect(pushTan).toBeDefined();
+      expect(pushTan?.isDecoupled).toBe(true);
+    });
+
+    it('should not match 999 as it is reserved for single-step mode', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HITANS', ['HITANS:70:6:4+1+1+1+999:2:singleStep:::Single Step TAN']);
+
+      const methods = extractTanMethods(segments);
+      expect(methods.find((m) => m.id === '999')).toBeUndefined();
+    });
   });
 
   describe('extractAllowedTanMethods', () => {
-    it('should extract allowed TAN methods from HIRMS 3920', () => {
+    it('should extract allowed TAN methods from HIRMS 3920 with colon format', () => {
       const segments = new Map<string, string[]>();
-      // The format should have 3920 code followed by text, then a colon and the methods
       segments.set('HIRMS', ['HIRMS:3:2+3920::Allowed TAN methods:900:910:920']);
 
       const allowed = extractAllowedTanMethods(segments);
-      // The regex captures everything after "3920...:" as a number sequence
-      expect(allowed.length).toBeGreaterThan(0);
+      expect(allowed).toContain('900');
+      expect(allowed).toContain('910');
+      expect(allowed).toContain('920');
+    });
+
+    it('should extract single TAN method with period format (Sparkasse)', () => {
+      // Real format from Sparkasse: "3920::Zugelassene Zwei-Schritt-Verfahren für den Benutzer.:923"
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', [
+        'HIRMS:4:2:4+3920::Zugelassene Zwei-Schritt-Verfahren für den Benutzer.:923',
+      ]);
+
+      const allowed = extractAllowedTanMethods(segments);
+      expect(allowed).toEqual(['923']);
+    });
+
+    it('should extract multiple TAN methods from complex HIRMS', () => {
+      const segments = new Map<string, string[]>();
+      segments.set('HIRMS', [
+        "HIRMS:4:2:4+3050::BPD nicht mehr aktuell.+3920::Zugelassene Verfahren:910:920:923'",
+      ]);
+
+      const allowed = extractAllowedTanMethods(segments);
+      expect(allowed).toContain('910');
+      expect(allowed).toContain('920');
+      expect(allowed).toContain('923');
     });
 
     it('should return empty array if no 3920 code', () => {
@@ -240,14 +529,15 @@ describe('FinTS extractors', () => {
       expect(allowed).toEqual([]);
     });
 
-    it('should filter out empty strings', () => {
+    it('should only extract valid TAN method IDs (9xx)', () => {
       const segments = new Map<string, string[]>();
-      segments.set('HIRMS', ['HIRMS:3:2+3920::Methods:900::910']);
+      // Contains 180 which should NOT be extracted
+      segments.set('HIRMS', ['HIRMS:3:2+3920::Methods:180:923:2048']);
 
       const allowed = extractAllowedTanMethods(segments);
-      allowed.forEach((m) => {
-        expect(m.length).toBeGreaterThan(0);
-      });
+      expect(allowed).toEqual(['923']);
+      expect(allowed).not.toContain('180');
+      expect(allowed).not.toContain('2048');
     });
   });
 

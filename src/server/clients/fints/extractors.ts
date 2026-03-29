@@ -9,9 +9,20 @@ import { logger } from './utils.js';
 import { extractElements } from './parsers.js';
 
 /**
- * Check response for errors
+ * FinTS warning/info codes that indicate specific conditions
+ * These are codes in the 3xxx range that provide important information
  */
-export function checkForErrors(segments: Map<string, string[]>): void {
+export interface FinTSWarning {
+  code: number;
+  message: string;
+}
+
+/**
+ * Extract warnings from HIRMG/HIRMS segments
+ * Warning codes are in the 3xxx range
+ */
+export function extractWarnings(segments: Map<string, string[]>): FinTSWarning[] {
+  const warnings: FinTSWarning[] = [];
   const returnSegments = segments.get('HIRMG') || [];
   returnSegments.push(...(segments.get('HIRMS') || []));
 
@@ -19,16 +30,169 @@ export function checkForErrors(segments: Map<string, string[]>): void {
     const elements = extractElements(segment);
     for (const element of elements) {
       // Parse return code
-      const codeMatch = element.match(/^(\d{4})/);
+      const codeMatch = element.match(/^(\d{4}):*(.*)/);
       if (codeMatch) {
         const code = parseInt(codeMatch[1], 10);
-        // Codes 9xxx are errors
-        if (code >= 9000) {
-          throw new Error(`FinTS Error ${code}: ${element.slice(5)}`);
+        // Codes 3xxx are warnings/info
+        if (code >= 3000 && code < 4000) {
+          warnings.push({
+            code,
+            message: codeMatch[2]?.replace(/^:+/, '') || `Warning ${code}`,
+          });
         }
       }
     }
   }
+
+  return warnings;
+}
+
+/**
+ * Check if there are critical warnings that should stop the flow
+ * Returns the warning if found, null otherwise
+ */
+export function checkForCriticalWarnings(segments: Map<string, string[]>): FinTSWarning | null {
+  const warnings = extractWarnings(segments);
+
+  // Check for specific critical warning codes
+  for (const warning of warnings) {
+    switch (warning.code) {
+      case 3938: // Access temporarily locked - PIN block
+        return warning;
+      case 3939: // Access locked
+        return warning;
+      case 3916: // PIN wrong
+        return warning;
+      case 3910: // PIN invalid
+        return warning;
+      case 3931: // TAN wrong
+        return warning;
+      case 3933: // TAN locked
+        return warning;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * FinTS error from response
+ */
+export interface FinTSError {
+  code: number;
+  message: string;
+}
+
+/**
+ * Extract errors from HIRMG/HIRMS segments
+ * Error codes are in the 9xxx range
+ */
+export function extractErrors(segments: Map<string, string[]>): FinTSError[] {
+  const errors: FinTSError[] = [];
+  const returnSegments = segments.get('HIRMG') || [];
+  returnSegments.push(...(segments.get('HIRMS') || []));
+
+  for (const segment of returnSegments) {
+    const elements = extractElements(segment);
+    for (const element of elements) {
+      // Parse return code
+      const codeMatch = element.match(/^(\d{4}):*(.*)/);
+      if (codeMatch) {
+        const code = parseInt(codeMatch[1], 10);
+        // Codes 9xxx are errors
+        if (code >= 9000) {
+          errors.push({
+            code,
+            message: codeMatch[2]?.replace(/^:+/, '') || `Error ${code}`,
+          });
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Authentication-related error codes that should result in user-friendly messages
+ */
+const AUTH_ERROR_CODES: Record<number, string> = {
+  9010: 'PIN/TAN verification failed',
+  9931: 'Username or PIN is incorrect',
+  9930: 'Username unknown',
+  9942: 'Access blocked',
+  9800: 'Dialog cancelled',
+  9050: 'Request contains errors',
+};
+
+/**
+ * Check response for errors (9xxx codes)
+ * Throws FinTSAuthError for authentication-related errors
+ */
+export function checkForErrors(segments: Map<string, string[]>): void {
+  const errors = extractErrors(segments);
+
+  if (errors.length === 0) {
+    return;
+  }
+
+  // Check for authentication-related errors first
+  for (const error of errors) {
+    if (error.code in AUTH_ERROR_CODES || error.code === 9931 || error.code === 9010) {
+      // Import would cause circular dependency, so we throw a regular error with special marker
+      const authError = new Error(`AUTH_ERROR:${error.code}:${error.message}`);
+      authError.name = 'FinTSAuthError';
+      throw authError;
+    }
+  }
+
+  // For non-auth errors, throw the first one
+  const firstError = errors[0];
+  throw new Error(`FinTS Error ${firstError.code}: ${firstError.message}`);
+}
+
+/**
+ * Check if synchronization is required (error code 9391)
+ * This is required when the bank requires device recognition via Kundensystem-ID.
+ * Per FinTS spec and Sparkassen requirements, the client must respond with HKSYN.
+ */
+export function checkSyncRequired(segments: Map<string, string[]>): boolean {
+  const errors = extractErrors(segments);
+  return errors.some((error) => error.code === 9391);
+}
+
+/**
+ * Extract Kundensystem-ID from HISYN (synchronization response) segment.
+ * The bank returns a new system ID that must be persisted and used in future dialogs.
+ *
+ * HISYN segment format: HISYN:<seg>:<ver>+<kundensystemID>+<nachrichtennummer>+<signaturID>
+ * We're interested in the first data element (kundensystemID).
+ */
+export function extractSystemId(segments: Map<string, string[]>): string | null {
+  const hisynSegments = segments.get('HISYN') || [];
+
+  for (const segment of hisynSegments) {
+    const elements = extractElements(segment);
+    // HISYN format varies:
+    // - Without ref: HISYN:4:4+<systemId>+... → elements[0] = systemId
+    // - With ref: HISYN:4:4:5+<systemId>+... → elements[0] = ':5', elements[1] = systemId
+    // Skip any element that starts with ':' (segment reference)
+    let systemIdIndex = 0;
+    if (elements.length > 0 && elements[0]?.startsWith(':')) {
+      systemIdIndex = 1;
+    }
+
+    if (elements.length > systemIdIndex && elements[systemIdIndex]) {
+      const systemId = elements[systemIdIndex];
+      // System ID is typically numeric or alphanumeric, not '0'
+      if (systemId && systemId !== '0') {
+        logger.debug(`Extracted Kundensystem-ID from HISYN: ${systemId}`);
+        return systemId;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -104,6 +268,18 @@ export function extractAccounts(segments: Map<string, string[]>): FinTSAccount[]
 
 /**
  * Check if TAN is required and parse TAN methods
+ *
+ * According to FinTS spec, TAN method IDs (Sicherheitsfunktion) are in range 900-997.
+ * The 999 is reserved for single-step mode.
+ *
+ * HITANS segment structure (v6/v7):
+ * <id>:<tanProzess>:<technischeIdentifikation>:<dkTanVerfahren>:<versionDkTanVerfahren>:<name>:
+ * <maxLength>:<erlaubtesFormat>:<textZurBelegung>:<maxReturnLength>:<mehrfachTan>:
+ * <tanZeitDialogbezug>:<auftragsstorno>:<smsAbbuchungskonto>:<auftraggeberkontoErforderlich>:
+ * <challengeKlasse>:<challengeStrukturiert>:<initialisierungsmodus>:<bezeichnungTanMediumErforderlich>:
+ * <antwortHhdUc>:<anzahlUnterstuetztAktiveTanMedien>
+ *
+ * Example: 910:2:HHD1.3.0:::chipTAN manuell:6:1:TAN-Nummer:3:J:2:N:0:0:N:N:00:0:N:1
  */
 export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMethod[] {
   const methods: FinTSTanMethod[] = [];
@@ -116,16 +292,21 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
     logger.debug(`HITANS elements: ${JSON.stringify(elements)}`);
 
     // The TAN methods are embedded within the last element(s) as colon-separated values
-    // We need to find patterns like: <3-digit-id>:<1-digit-process>:<technical-name>:...
     for (const element of elements) {
       // Use regex to find all TAN method definitions within the element
-      // Format: <id>:<process>:<technicalName>:<optional>:<optional>:<name>:...
-      // Example: 940:2:SealOne:Decoupled::DKB App:::DKB App:2048:N:1:N:0:0:N:J:00:0:N
-      const methodRegex = /(\d{3}):(\d):([^:]*):([^:]*):([^:]*):([^:]*)/g;
+      // TAN method IDs (Sicherheitsfunktion) are in the range 900-997 according to FinTS spec.
+      // Format: <id>:<tanProzess>:<technischeIdentifikation>:<dkTanVerfahren>:<version>:<name>:...
+      // The tanProzess is typically 1 or 2 (Prozessvariante).
+      // Using negative lookbehind to avoid matching numbers that are part of other fields.
+      const methodRegex = /(?:^|:)(9\d{2}):([12]):([^:]*):([^:]*):([^:]*):([^:]*)/g;
       let match;
 
       while ((match = methodRegex.exec(element)) !== null) {
-        const [fullMatch, id, , technicalName, extra1, extra2, possibleName] = match;
+        const [fullMatch, id, tanProzess, technicalName, dkTanVerfahren, version, possibleName] =
+          match;
+
+        // Skip if ID is 999 (single-step mode, not a real TAN method)
+        if (id === '999') continue;
 
         // Determine the name - it could be in different positions
         // For DKB: 940:2:SealOne:Decoupled::DKB App - name is after empty fields
@@ -144,26 +325,29 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
         }
 
         // Check if this is a decoupled (app-based) TAN method
+        // Decoupled methods include pushTAN 2.0, App-based TAN, etc.
         const isDecoupled =
           id === '940' || // DKB App is always method 940
           technicalName?.toLowerCase().includes('sealon') ||
           technicalName?.toLowerCase().includes('decoupled') ||
           technicalName?.toLowerCase().includes('pushtan') ||
-          extra1?.toLowerCase().includes('decoupled') ||
-          extra2?.toLowerCase().includes('decoupled') ||
+          technicalName?.toLowerCase().includes('tan2go') ||
+          dkTanVerfahren?.toLowerCase() === 'app' ||
+          dkTanVerfahren?.toLowerCase() === 'decoupled' ||
+          dkTanVerfahren?.toLowerCase() === 'decoupledpush' ||
           fullMatch.toLowerCase().includes('decoupled');
 
         // Avoid duplicates
         if (!methods.find((m) => m.id === id)) {
           logger.debug(
-            `Parsed TAN method: id=${id}, name=${name}, technical=${technicalName}, isDecoupled=${isDecoupled}`
+            `Parsed TAN method: id=${id}, tanProzess=${tanProzess}, name=${name}, technical=${technicalName}, dkTanVerfahren=${dkTanVerfahren}, isDecoupled=${isDecoupled}`
           );
 
           methods.push({
             id,
             name: name || technicalName || `TAN Method ${id}`,
             technicalName: technicalName || '',
-            version: extra1 || '',
+            version: version || '',
             isDecoupled,
           });
         }
@@ -176,15 +360,49 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
 
 /**
  * Extract allowed TAN methods for the user from HIRMS 3920
+ *
+ * The format varies by bank but typically looks like:
+ * - "3920::Zugelassene Zwei-Schritt-Verfahren für den Benutzer.:923"
+ * - "3920::Allowed TAN methods:900:910:920"
+ *
+ * The TAN method IDs (3-digit numbers in 900-997 range) can appear:
+ * - After a colon: ":923" or ":900:910:920"
+ * - After a period: ".923"
  */
 export function extractAllowedTanMethods(segments: Map<string, string[]>): string[] {
   const hirmsSegments = segments.get('HIRMS') || [];
 
   for (const segment of hirmsSegments) {
     // Look for 3920 return code which lists allowed TAN methods
-    const match = segment.match(/3920[^']*:([0-9:]+)/);
-    if (match) {
-      return match[1].split(':').filter((m) => m.length > 0);
+    if (!segment.includes('3920')) continue;
+
+    // Extract the part after 3920 (stop at segment separator ' or +)
+    const match3920 = segment.match(/3920[^']+/);
+    if (!match3920) continue;
+
+    const content = match3920[0];
+    logger.debug(`Parsing 3920 content: ${content}`);
+
+    // Find all 3-digit TAN method IDs (900-997 range) in the content
+    // They appear after colons or periods
+    const tanMethodIds: string[] = [];
+    // Match TAN method IDs that:
+    // - Are preceded by : or .
+    // - Are 3 digits starting with 9 (900-999 range, though 999 is single-step)
+    // - Are followed by : or . or ' or end of string or non-digit
+    const idMatches = content.matchAll(/[:.]([89]\d{2})(?=[:.'+ ]|$)/g);
+
+    for (const idMatch of idMatches) {
+      const id = idMatch[1];
+      // Only include 9xx IDs (900-997), exclude 999 (single-step) and 8xx
+      if (id.startsWith('9') && id !== '999' && !tanMethodIds.includes(id)) {
+        tanMethodIds.push(id);
+      }
+    }
+
+    if (tanMethodIds.length > 0) {
+      logger.debug(`Extracted allowed TAN methods: ${tanMethodIds.join(', ')}`);
+      return tanMethodIds;
     }
   }
 
