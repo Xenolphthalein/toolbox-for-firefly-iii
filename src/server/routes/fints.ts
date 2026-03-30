@@ -40,16 +40,16 @@ function getClient(sessionId: string): FinTSClient | undefined {
 function setClient(sessionId: string, client: FinTSClient): void {
   // Register cleanup callback to end dialog when entry is evicted
   clientStore.set(sessionId, client, () => {
-    logger.debug(`Ending dialog for evicted session ${sessionId}`);
+    logger.debug('Ending dialog for evicted FinTS session');
     client.endDialog().catch(() => {});
   });
-  logger.debug(`Client stored for session ${sessionId}`);
+  logger.debug('FinTS client stored in session');
 }
 
 async function clearClient(sessionId: string): Promise<void> {
   const client = clientStore.get(sessionId);
   if (client) {
-    logger.debug(`Clearing client for session ${sessionId}`);
+    logger.debug('Clearing FinTS client from session');
     try {
       await client.endDialog();
     } catch {
@@ -93,7 +93,7 @@ router.post(
     const sessionId = getPersistedSessionId(req);
     const clientConfig = req.body as FinTSConnectBody;
 
-    logger.info(`Connection request for bank ${clientConfig.bankCode} (session: ${sessionId})`);
+    logger.info(`Connection request for bank ${clientConfig.bankCode}`);
 
     // Clear any existing client
     await clearClient(sessionId);
@@ -135,7 +135,7 @@ router.post(
     const sessionId = getPersistedSessionId(req);
     const { tan, orderRef } = req.body as FinTSSubmitTanBody;
 
-    logger.info(`TAN submission for session ${sessionId}`);
+    logger.info('TAN submission received');
 
     const client = getClient(sessionId);
     const currentState = dialogStateStore.get(sessionId);
@@ -165,7 +165,7 @@ router.post(
     const sessionId = getPersistedSessionId(req);
     const { orderRef } = req.body;
 
-    logger.info(`Polling TAN status for session ${sessionId}`);
+    logger.info('Polling TAN status');
 
     const client = getClient(sessionId);
     const currentState = dialogStateStore.get(sessionId);
@@ -196,7 +196,7 @@ router.post(
     const sessionId = getPersistedSessionId(req);
     const { account, startDate, endDate } = req.body as FinTSFetchBody;
 
-    logger.info(`Fetch request for session ${sessionId}: ${startDate} to ${endDate}`);
+    logger.info('Fetch request received');
 
     const client = getClient(sessionId);
 
@@ -212,8 +212,6 @@ router.post(
       startDate,
       endDate,
     });
-
-    logger.info(`Fetched ${transactions.length} transactions from bank`);
 
     res.json({
       success: true,
@@ -231,7 +229,7 @@ router.post(
     const sessionId = getPersistedSessionId(req);
     const { account, startDate, endDate } = req.body as FinTSFetchBody;
 
-    logger.info(`Fetch request for session ${sessionId}: ${startDate} to ${endDate}`);
+    logger.info('Streaming fetch request received');
 
     const client = getClient(sessionId);
 
@@ -262,8 +260,6 @@ router.post(
         startDate,
         endDate,
       });
-
-      logger.info(`Fetched ${transactions.length} transactions from bank`);
 
       // Check for early disconnect
       if (!sse.isConnected()) {
@@ -335,7 +331,7 @@ router.post(
       try {
         const tx = result.fireflyTransaction;
 
-        logger.debug(`Importing transaction: ${tx.description}`);
+        logger.debug('Importing transaction into Firefly');
 
         await fireflyApi.createTransaction({
           error_if_duplicate_hash: true,
@@ -359,7 +355,7 @@ router.post(
         results.successful.push(result.fintsTransaction.reference || tx.description);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        logger.debug(`Failed to import: ${errorMessage}`);
+        logger.debug('Failed to import transaction into Firefly');
         results.failed.push({
           id: result.fintsTransaction.reference || result.fireflyTransaction.description,
           error: errorMessage,
@@ -384,7 +380,7 @@ router.post(
   '/disconnect',
   asyncHandler(async (req: Request, res: Response) => {
     const sessionId = getPersistedSessionId(req);
-    logger.info(`Disconnect request for session ${sessionId}`);
+    logger.info('Disconnect request received');
     await clearClient(sessionId);
 
     res.json({

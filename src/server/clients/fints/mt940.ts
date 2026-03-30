@@ -77,7 +77,7 @@ export function parseMT940(mt940Data: string): FinTSTransaction[] {
         );
 
         if (!trxMatch) {
-          logger.debug(`Failed to parse transaction: ${transaction.slice(0, 50)}`);
+          logger.debug('Failed to parse MT940 transaction record');
           continue;
         }
 
@@ -119,10 +119,6 @@ export function parseMT940(mt940Data: string): FinTSTransaction[] {
 
         // Parse description (field 86)
         const parsed = parseDescription(description);
-
-        logger.debug(
-          `Transaction ${valutaDate} ${signedAmount}: name="${parsed.name}", svwz="${parsed.svwz?.slice(0, 50)}..."`
-        );
 
         transactions.push({
           reference: rest?.split('//')[0]?.trim() || 'NONREF',

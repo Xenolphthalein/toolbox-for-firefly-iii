@@ -42,6 +42,7 @@ export interface Config {
   };
   fints: {
     productId: string;
+    logRedaction: boolean;
   };
   // Legacy openai config for backward compatibility
   openai: {
@@ -83,6 +84,23 @@ function getEnvVar(key: string, defaultValue?: string): string {
 
 function getOptionalEnvVar(key: string, defaultValue: string = ''): string {
   return process.env[key] ?? defaultValue;
+}
+
+function getOptionalBooleanEnvVar(key: string, defaultValue: boolean): boolean {
+  const value = getOptionalEnvVar(key, '').trim().toLowerCase();
+  if (!value) {
+    return defaultValue;
+  }
+
+  if (['true', '1', 'yes', 'on'].includes(value)) {
+    return true;
+  }
+
+  if (['false', '0', 'no', 'off'].includes(value)) {
+    return false;
+  }
+
+  return defaultValue;
 }
 
 function detectAIProvider(): AIProvider {
@@ -274,6 +292,7 @@ export const config: Config = {
   fints: {
     // FinTS product registration ID - register at https://www.hbci-zka.de/register/hersteller.htm
     productId: getOptionalEnvVar('FINTS_PRODUCT_ID', ''),
+    logRedaction: getOptionalBooleanEnvVar('FINTS_LOG_REDACTION', true),
   },
   // Legacy support
   openai: {
@@ -377,6 +396,12 @@ export function validateConfig(): { valid: boolean; errors: string[]; warnings: 
 
   if (!config.firefly.apiToken) {
     errors.push('FIREFLY_API_TOKEN is not configured');
+  }
+
+  if (!config.fints.logRedaction) {
+    warnings.push(
+      'FINTS_LOG_REDACTION is disabled. FinTS debug logs may contain raw bank payloads, account data, and transaction details.'
+    );
   }
 
   // Production security enforcement (FS-SEC-001)

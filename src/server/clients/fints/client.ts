@@ -5,6 +5,7 @@
  * including dialog management, TAN handling, and transaction fetching.
  */
 
+import { URL } from 'url';
 import type {
   FinTSConfig,
   FinTSAccount,
@@ -57,7 +58,7 @@ export class FinTSClient {
     this.config = config;
     this.secRef = generateMsgRef();
     logger.info(`Client created for bank ${config.bankCode}`);
-    logger.debug(`FinTS URL: ${config.url}`);
+    logger.debug(`FinTS endpoint host: ${new URL(config.url).hostname}`);
   }
 
   /**
@@ -193,7 +194,7 @@ export class FinTSClient {
     const hitan = parsedSegments.get('HITAN')?.[0];
     if (hitan) {
       const elements = extractElements(hitan);
-      logger.debug(`HITAN elements: ${JSON.stringify(elements)}`);
+      logger.debug(`HITAN response received with ${elements.length} element(s)`);
 
       // HITAN segment structure (version 6):
       // HITAN:4:6:5+4++<orderRef>+<challengeText>+++<tanMediumName>
@@ -206,8 +207,7 @@ export class FinTSClient {
       this.orderRef = elements[3] || elements[2] || elements[1] || '';
       const challengeText = elements[4] || '';
 
-      logger.info(`Order reference: ${this.orderRef}`);
-      logger.info(`Challenge: ${challengeText}`);
+      logger.info('Received TAN challenge from bank');
 
       return {
         dialogId: this.dialogId,
@@ -299,7 +299,7 @@ export class FinTSClient {
    * Poll for decoupled TAN completion (for app-based TAN like DKB App)
    */
   async pollDecoupledTan(orderRef: string): Promise<FinTSDialogState> {
-    logger.info(`Polling for decoupled TAN completion (orderRef: ${orderRef})...`);
+    logger.info('Polling for decoupled TAN completion...');
     this.orderRef = orderRef;
     this.secRef = generateMsgRef();
 
@@ -442,7 +442,7 @@ export class FinTSClient {
    * Submit TAN for two-step authentication (manual TAN entry)
    */
   async submitTan(tan: string, orderRef: string): Promise<FinTSDialogState> {
-    logger.info(`Submitting TAN (orderRef: ${orderRef})...`);
+    logger.info('Submitting TAN...');
     this.orderRef = orderRef;
     this.secRef = generateMsgRef();
 
@@ -535,7 +535,7 @@ export class FinTSClient {
       const orderRef = elements[3] || '';
       const challenge = elements[4] || '';
 
-      logger.debug(`HITAN in account response: orderRef=${orderRef}, challenge=${challenge}`);
+      logger.debug('HITAN present in account response');
 
       // "noref" or "nochallenge" means no TAN is actually required
       if (orderRef === 'noref' || challenge === 'nochallenge') {
@@ -571,7 +571,7 @@ export class FinTSClient {
       checkForErrors(accountParsedSegments);
     } catch (error) {
       // 9040 means authentication missing - might need different approach
-      logger.error(`Account request failed: ${error}`);
+      logger.error('Account request failed', error);
       throw error;
     }
 
@@ -600,10 +600,8 @@ export class FinTSClient {
    * Fetch transactions for an account
    */
   async fetchTransactions(options: FinTSFetchOptions): Promise<FinTSTransaction[]> {
-    logger.info(
-      `Fetching transactions for account ${options.account.iban || options.account.accountNumber}`
-    );
-    logger.debug(`Date range: ${options.startDate} to ${options.endDate}`);
+    logger.info('Fetching transactions for selected account');
+    logger.debug('Date range provided for transaction fetch');
     logger.debug(`Dialog ID: ${this.dialogId}, Message number: ${this.msgNumber}`);
 
     // Use HKTAN version 7 for decoupled TAN methods (must be consistent throughout dialog)
@@ -682,7 +680,6 @@ export class FinTSClient {
             `MT940 binary data: declared=${declaredLength}, actual=${mt940Data.length} chars`
           );
           const transactions = parseMT940(mt940Data);
-          logger.debug(`Parsed ${transactions.length} transactions from MT940 data`);
           allTransactions.push(...transactions);
         } else {
           logger.warn('HIKAZ segment found but no binary MT940 data marker');
@@ -730,7 +727,7 @@ export class FinTSClient {
       await sendRequest(this.config.url, message);
       logger.info('Dialog ended successfully');
     } catch (error) {
-      logger.warn(`Error ending dialog: ${error instanceof Error ? error.message : 'Unknown'}`);
+      logger.warn('Error ending dialog', error);
     } finally {
       this.dialogId = '0';
       this.msgNumber = 1;
