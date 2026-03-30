@@ -43,6 +43,8 @@ describe('FinTS log redaction toggle', () => {
     );
 
     const output = String(logSpy.mock.calls[0]?.[0] || '');
-    expect(output).toContain("Transaction fetch response:\nHNHBK:1:3+000000000123+300+1+1'HIKAZ:4:6:3+@18@DE89370400440532013000'");
+    expect(output).toContain(
+      "Transaction fetch response:\nHNHBK:1:3+000000000123+300+1+1'HIKAZ:4:6:3+@18@DE89370400440532013000'"
+    );
   });
 });

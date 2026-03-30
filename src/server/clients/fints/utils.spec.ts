@@ -70,9 +70,7 @@ describe('FinTS utils', () => {
       const input =
         "HIUPA:15:3:4+12345+4+0+Herr Meier'HIUPD:16:5:4+1234567:280:10020030+12345+1+EUR+Ernst Müller'HITAN:4:6:5+4++ORDER123+Bitte in App bestätigen'HIKAZ:4:6:3+@362@MT940DATA'";
       const result = scrubSensitiveData(input);
-      expect(result).toBe(
-        "HIUPA:15:3:4+████'HIUPD:16:5:4+████'HITAN:4:6:5+████'HIKAZ:4:6:3+████'"
-      );
+      expect(result).toBe("HIUPA:15:3:4+████'HIUPD:16:5:4+████'HITAN:4:6:5+████'HIKAZ:4:6:3+████'");
       expect(result).not.toContain('Herr Meier');
       expect(result).not.toContain('Ernst Müller');
       expect(result).not.toContain('ORDER123');
@@ -161,9 +159,11 @@ describe('FinTS utils', () => {
       expect(output).toContain('segmentTypes=HNHBKx1, HIRMGx1, HIKAZx1, HNHBSx1');
       expect(output).toContain('sensitive=HIKAZ@18');
       expect(output).toContain('returnCodes=9800, 9010');
-      expect(output).toContain('HIRMG:2:2:+9800::Der Dialog wurde abgebrochen.+9010::Ungültiger Signaturaufbau?: Fehler im Segmentaufbau.');
-      expect(output).toContain("HIKAZ:4:6:3+[redacted chars=");
-      expect(output).toContain("binary=18]");
+      expect(output).toContain(
+        'HIRMG:2:2:+9800::Der Dialog wurde abgebrochen.+9010::Ungültiger Signaturaufbau?: Fehler im Segmentaufbau.'
+      );
+      expect(output).toContain('HIKAZ:4:6:3+[redacted chars=');
+      expect(output).toContain('binary=18]');
       expect(output).not.toContain('DE89370400440532013000');
       expect(output).not.toContain('@18@');
     });

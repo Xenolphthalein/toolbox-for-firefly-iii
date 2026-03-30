@@ -64,9 +64,7 @@ function summarizeSegmentCounts(segments: ParsedSegment[]): string {
     counts.set(segment.name, (counts.get(segment.name) || 0) + 1);
   }
 
-  return [...counts.entries()]
-    .map(([name, count]) => `${name}x${count}`)
-    .join(', ');
+  return [...counts.entries()].map(([name, count]) => `${name}x${count}`).join(', ');
 }
 
 function summarizeSensitiveSegments(segments: ParsedSegment[]): string {
@@ -187,7 +185,9 @@ function scrubSensitiveLogData(data: unknown): unknown {
     return Object.fromEntries(
       Object.entries(data).map(([key, value]) => [
         key,
-        SENSITIVE_LOG_KEY_PATTERN.test(key) ? redactUnknownValue(value) : scrubSensitiveLogData(value),
+        SENSITIVE_LOG_KEY_PATTERN.test(key)
+          ? redactUnknownValue(value)
+          : scrubSensitiveLogData(value),
       ])
     );
   }
@@ -200,13 +200,25 @@ function createRedactingLogger(context: string): Logger {
 
   return {
     error: (message: string, data?: unknown) =>
-      baseLogger.error(config.fints.logRedaction ? scrubSensitiveData(message) : message, scrubSensitiveLogData(data)),
+      baseLogger.error(
+        config.fints.logRedaction ? scrubSensitiveData(message) : message,
+        scrubSensitiveLogData(data)
+      ),
     warn: (message: string, data?: unknown) =>
-      baseLogger.warn(config.fints.logRedaction ? scrubSensitiveData(message) : message, scrubSensitiveLogData(data)),
+      baseLogger.warn(
+        config.fints.logRedaction ? scrubSensitiveData(message) : message,
+        scrubSensitiveLogData(data)
+      ),
     info: (message: string, data?: unknown) =>
-      baseLogger.info(config.fints.logRedaction ? scrubSensitiveData(message) : message, scrubSensitiveLogData(data)),
+      baseLogger.info(
+        config.fints.logRedaction ? scrubSensitiveData(message) : message,
+        scrubSensitiveLogData(data)
+      ),
     debug: (message: string, data?: unknown) =>
-      baseLogger.debug(config.fints.logRedaction ? scrubSensitiveData(message) : message, scrubSensitiveLogData(data)),
+      baseLogger.debug(
+        config.fints.logRedaction ? scrubSensitiveData(message) : message,
+        scrubSensitiveLogData(data)
+      ),
     child: (subContext: string) =>
       createRedactingLogger(context ? `${context}:${subContext}` : subContext),
   };
