@@ -4,6 +4,7 @@ export { SubscriptionFinder } from './subscriptionFinder.js';
 export { AISuggestionService } from './aiSuggestions.js';
 export { AmazonOrderExtender } from './amazonExtender.js';
 export { PayPalExtender } from './paypalExtender.js';
+export { getFinTSBankIndex, preloadFinTSBankIndex } from './fintsBankIndex.js';
 
 // Caching
 export {

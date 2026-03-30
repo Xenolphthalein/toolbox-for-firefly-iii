@@ -11,7 +11,11 @@ import {
   csrfTokenCookie,
   configureSecurityMiddleware,
 } from './middleware/index.js';
-import { startCleanupInterval, stopCleanupInterval } from './services/index.js';
+import {
+  preloadFinTSBankIndex,
+  startCleanupInterval,
+  stopCleanupInterval,
+} from './services/index.js';
 import routes from './routes/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -116,6 +120,10 @@ const server = app.listen(config.port, () => {
 
   // Start session store cleanup interval
   startCleanupInterval();
+
+  if (config.fints.productId) {
+    void preloadFinTSBankIndex();
+  }
 });
 
 // Graceful shutdown

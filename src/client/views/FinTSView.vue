@@ -56,6 +56,7 @@
                     item-title="name"
                     item-value="blz"
                     :label="t('views.fints.selectBank')"
+                    :custom-filter="filterKnownBanks"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -65,11 +66,28 @@
                     :disabled="connecting || dialogState !== null"
                     @update:model-value="onBankSelected"
                   >
+                    <template #append-inner>
+                      <v-tooltip location="top" max-width="320">
+                        <template #activator="{ props: tooltipProps }">
+                          <v-icon
+                            v-bind="tooltipProps"
+                            size="18"
+                            color="info"
+                            class="mr-1"
+                          >
+                            mdi-information-outline
+                          </v-icon>
+                        </template>
+                        {{ t('views.fints.bankDataSourceTooltip') }}
+                      </v-tooltip>
+                    </template>
                     <template #item="{ item, props: itemProps }">
                       <v-list-item v-bind="itemProps">
-                        <v-list-item-subtitle
-                          >{{ t('common.labels.blz') }}: {{ item.raw.blz }}</v-list-item-subtitle
-                        >
+                        <v-list-item-subtitle>
+                          {{ t('common.labels.blz') }}: {{ item.raw.blz }}
+                          <span v-if="item.raw.bic"> | BIC: {{ item.raw.bic }}</span>
+                          <span v-if="item.raw.city"> | {{ item.raw.city }}</span>
+                        </v-list-item-subtitle>
                       </v-list-item>
                     </template>
                   </v-autocomplete>
@@ -878,9 +896,10 @@ import draggable from 'vuedraggable';
 import api from '../services/api';
 import type {
   FinTSAccount,
+  FinTSBankInfo,
   FinTSDialogState,
-  FinTSTanRequest,
   FinTSTanMethod,
+  FinTSTanRequest,
   FinTSTransaction,
 } from '@shared/types/app';
 import type { ImportValidation } from '@shared/types/converter';
@@ -895,12 +914,7 @@ import { SwimlaneCard } from '../components/converter';
 import { useProgress, useConverter, useSnackbar } from '../composables';
 import { sanitizeFilenamePart, saveBlobWithDialog } from '../utils';
 
-// Types for bank list
-interface KnownBank {
-  blz: string;
-  name: string;
-  url: string;
-}
+type KnownBank = FinTSBankInfo;
 
 const { t } = useI18n();
 
@@ -1195,6 +1209,22 @@ async function fetchKnownBanks() {
   }
 }
 fetchKnownBanks();
+
+function filterKnownBanks(_value: string, queryText: string, item?: { raw: KnownBank }): boolean {
+  if (!queryText) {
+    return true;
+  }
+
+  const bank = item?.raw;
+  if (!bank) {
+    return false;
+  }
+
+  const query = queryText.toLowerCase().trim();
+  return [bank.name, bank.blz, bank.bic, bank.city]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => value.toLowerCase().includes(query));
+}
 
 // Bank selection handler
 function onBankSelected(bank: KnownBank | null) {

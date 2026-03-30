@@ -86,6 +86,9 @@ Generic CSV import tool with visual column mapping, data transformation rules, a
 
 Direct import for German banks via FinTS/HBCI. Supports TAN procedures (mobile/push). Requires [FinTS product registration](https://www.fints.org/de/hersteller/produktregistrierung).
 
+> [!IMPORTANT]
+> When FinTS is configured, the server downloads the current German bank index from aqbanking during startup and uses it to populate the bank selector: `https://github.com/aqbanking/aqbanking/raw/refs/heads/master/src/libs/plugins/bankinfo/generic/de.tar.bz2`
+
 ---
 
 ## Installation

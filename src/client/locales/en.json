@@ -558,6 +558,7 @@
       },
       "bankConnection": "Bank Connection",
       "bankSelection": "Bank Selection",
+      "bankDataSourceTooltip": "Bank names and FinTS URLs in this selector are downloaded from aqbanking when the server starts. Please verify the result with your bank if needed.",
       "selectYourBank": "Select your bank",
       "selectBank": "Select a bank",
       "loginData": "Login Data",

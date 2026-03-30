@@ -13,4 +13,4 @@ export {
   reinitializeAIClient,
   testAIConnection,
 } from './ai.js';
-export { FinTSClient, KNOWN_BANKS } from './fints/index.js';
+export { FinTSClient } from './fints/index.js';
