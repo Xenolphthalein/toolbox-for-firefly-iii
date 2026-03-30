@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const INITIAL_ROW_BATCH = 50;
@@ -76,7 +76,10 @@ const isLoadingMore = ref(false);
 const visibleRows = computed(() => props.rows.slice(0, visibleCount.value));
 
 function resetVisibleRows(): void {
-  visibleCount.value = Math.min(INITIAL_ROW_BATCH, props.rows.length);
+  visibleCount.value = Math.min(
+    Math.max(INITIAL_ROW_BATCH, (props.selectedRowIndex ?? 0) + ROW_BATCH_SIZE),
+    props.rows.length
+  );
 }
 
 function loadMoreRows(): void {
@@ -88,6 +91,21 @@ function loadMoreRows(): void {
   requestAnimationFrame(() => {
     isLoadingMore.value = false;
   });
+}
+
+async function ensureScrollable(): Promise<void> {
+  await nextTick();
+
+  const container = scrollContainer.value;
+  if (!container) return;
+
+  while (
+    visibleCount.value < props.rows.length &&
+    container.scrollHeight <= container.clientHeight + 1
+  ) {
+    visibleCount.value = Math.min(visibleCount.value + ROW_BATCH_SIZE, props.rows.length);
+    await nextTick();
+  }
 }
 
 function onScroll(event: Event): void {
@@ -105,14 +123,28 @@ function onRowClick(rowIdx: number): void {
 
 watch(
   () => props.rows,
-  () => {
+  async () => {
     resetVisibleRows();
     if (scrollContainer.value) {
       scrollContainer.value.scrollTop = 0;
       scrollContainer.value.scrollLeft = 0;
     }
+    await ensureScrollable();
   },
   { immediate: true }
+);
+
+watch(
+  () => props.selectedRowIndex,
+  async () => {
+    if ((props.selectedRowIndex ?? 0) >= visibleCount.value) {
+      visibleCount.value = Math.min(
+        Math.max(visibleCount.value, (props.selectedRowIndex ?? 0) + ROW_BATCH_SIZE),
+        props.rows.length
+      );
+    }
+    await ensureScrollable();
+  }
 );
 </script>
 
