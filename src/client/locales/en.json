@@ -535,6 +535,7 @@
       "configLoaded": "Configuration loaded!",
       "configLoadedWithOptions": "Configuration loaded! CSV options and mappings applied.",
       "csvDownloaded": "CSV downloaded successfully!",
+      "failedToSaveConfig": "Failed to save configuration",
       "failedToDownload": "Failed to download CSV",
       "successfullyImported": "Successfully imported {count} transaction(s)!",
       "failedToImport": "Failed to import transactions",
@@ -596,6 +597,7 @@
         "failedToFetch": "Failed to fetch transactions",
         "configLoaded": "Configuration loaded successfully",
         "failedToLoadConfig": "Failed to load configuration",
+        "failedToSaveConfig": "Could not save FinTS configuration",
         "configLoadedEnterPin": "Configuration loaded! Enter your PIN to connect."
       }
     },

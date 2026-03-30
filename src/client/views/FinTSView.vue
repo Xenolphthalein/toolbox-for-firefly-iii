@@ -896,6 +896,7 @@ import { FIREFLY_COLUMNS } from '@shared/types/converter';
 import { WizardStepper, EmptyState } from '../components';
 import { SwimlaneCard } from '../components/converter';
 import { useProgress, useConverter, useSnackbar } from '../composables';
+import { sanitizeFilenamePart, saveBlobWithDialog } from '../utils';
 
 // Types for bank list
 interface KnownBank {
@@ -1435,7 +1436,15 @@ function onSwimlanesWheel(event: WheelEvent) {
 }
 
 // Save full config (including bank settings)
-function onSaveConfig() {
+function getFinTSConfigFilename(): string {
+  const identifier = sanitizeFilenamePart(
+    selectedAccount.value?.iban || selectedAccount.value?.accountNumber || ''
+  );
+
+  return identifier ? `fints-${identifier}-config.json` : 'fints-config.json';
+}
+
+async function onSaveConfig() {
   const converterConfig = JSON.parse(converter.saveConfig());
   const fullConfig = {
     version: '1.0',
@@ -1454,12 +1463,20 @@ function onSaveConfig() {
   };
   const json = JSON.stringify(fullConfig, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'fints-config.json';
-  a.click();
-  URL.revokeObjectURL(url);
+
+  try {
+    await saveBlobWithDialog(blob, {
+      suggestedName: getFinTSConfigFilename(),
+      description: 'JSON configuration',
+      mimeType: 'application/json',
+      extensions: ['.json'],
+    });
+  } catch (error) {
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToSaveConfig'),
+      'error'
+    );
+  }
 }
 
 // Load config (Stage 2 - converter only)
