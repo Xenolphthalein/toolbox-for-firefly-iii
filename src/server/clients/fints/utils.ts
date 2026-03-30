@@ -90,22 +90,30 @@ function buildRedactedMessageForLogging(message: string): string {
   const parts = message.split(/(?<!\?)'/);
 
   return parts
-    .map((part) => {
+    .map((part, index, arr) => {
       if (!part) {
         return part;
       }
 
-      const headerMatch = part.match(/^([A-Z]{5,6}):\d+:\d+(?::\d+)?/);
+      // Re-attach the terminator so scrub regexes that rely on a trailing `'`
+      // (e.g. HKIDN `\+1'`, HNSHK/HNVSK userId patterns) still match.
+      const hasTerminator = index < arr.length - 1;
+      const partForScrub = hasTerminator ? part + "'" : part;
+
+      const headerMatch = partForScrub.match(/^([A-Z]{5,6}):\d+:\d+(?::\d+)?/);
       if (!headerMatch) {
-        return scrubSensitiveData(part);
+        const result = scrubSensitiveData(partForScrub);
+        return hasTerminator && result.endsWith("'") ? result.slice(0, -1) : result;
       }
 
-      const segment: ParsedSegment = { name: headerMatch[1], raw: part };
+      const segment: ParsedSegment = { name: headerMatch[1], raw: partForScrub };
       if (WHOLE_SEGMENT_REDACTION.has(segment.name)) {
-        return summarizeSensitiveSegment(segment);
+        const result = summarizeSensitiveSegment(segment);
+        return hasTerminator && result.endsWith("'") ? result.slice(0, -1) : result;
       }
 
-      return scrubSensitiveData(part);
+      const result = scrubSensitiveData(partForScrub);
+      return hasTerminator && result.endsWith("'") ? result.slice(0, -1) : result;
     })
     .join("'");
 }
@@ -161,6 +169,19 @@ function redactUnknownValue(value: unknown): unknown {
 }
 
 function scrubSensitiveLogData(data: unknown): unknown {
+  // Always normalize Error objects so they serialize correctly via JSON.stringify.
+  // Without this, an Error passed when redaction is off would serialize to `{}`.
+  if (data instanceof Error) {
+    if (!config.fints.logRedaction) {
+      return { name: data.name, message: data.message, stack: data.stack };
+    }
+    return {
+      name: data.name,
+      message: scrubSensitiveData(data.message),
+      stack: data.stack ? scrubSensitiveData(data.stack) : undefined,
+    };
+  }
+
   if (!config.fints.logRedaction) {
     return data;
   }
@@ -171,14 +192,6 @@ function scrubSensitiveLogData(data: unknown): unknown {
 
   if (Array.isArray(data)) {
     return data.map((entry) => scrubSensitiveLogData(entry));
-  }
-
-  if (data instanceof Error) {
-    return {
-      name: data.name,
-      message: scrubSensitiveData(data.message),
-      stack: data.stack ? scrubSensitiveData(data.stack) : undefined,
-    };
   }
 
   if (data && typeof data === 'object') {

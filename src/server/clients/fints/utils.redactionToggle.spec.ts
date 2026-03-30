@@ -47,4 +47,16 @@ describe('FinTS log redaction toggle', () => {
       "Transaction fetch response:\nHNHBK:1:3+000000000123+300+1+1'HIKAZ:4:6:3+@18@DE89370400440532013000'"
     );
   });
+
+  it('normalizes Error objects to plain objects even when redaction is disabled', async () => {
+    const { logger } = await loadUtilsWithEnv('false');
+    const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    logger.error('Request failed', new Error('connection refused'));
+
+    const output = String(logSpy.mock.calls[0]?.[0] || '');
+    // The error message must appear; without normalization, JSON.stringify(Error) → '{}'
+    expect(output).toContain('connection refused');
+    expect(output).not.toContain('{}');
+  });
 });

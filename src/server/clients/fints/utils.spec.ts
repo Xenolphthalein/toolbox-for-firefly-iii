@@ -145,6 +145,23 @@ describe('FinTS utils', () => {
       expect(output).toContain('████');
     });
 
+    it('should scrub HKIDN user ID when message also contains WHOLE_SEGMENT_REDACTION segments', () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      // HIKAZ triggers buildRedactedMessageForLogging; HKIDN user ID must still be scrubbed
+      // even though the segment terminator is stripped during the split.
+      logMessage(
+        'info',
+        'Request',
+        "HNHBK:1:3+000000000200+300+1+1'HKIDN:3:2+280:10020030+user42+SYS123+1'HIKAZ:4:6:3+@18@DE89370400440532013000'"
+      );
+
+      const output = String(logSpy.mock.calls[0]?.[0] || '');
+      expect(output).not.toContain('user42');
+      expect(output).not.toContain('SYS123');
+      expect(output).not.toContain('DE89370400440532013000');
+    });
+
     it('should keep bank return messages while redacting sensitive FinTS segments', () => {
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
