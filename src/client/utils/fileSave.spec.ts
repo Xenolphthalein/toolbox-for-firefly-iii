@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  sanitizeFilenamePart,
-  saveBlobWithDialog,
-} from './fileSave';
+import { sanitizeFilenamePart, saveBlobWithDialog } from './fileSave';
 
 describe('fileSave', () => {
   beforeEach(() => {
