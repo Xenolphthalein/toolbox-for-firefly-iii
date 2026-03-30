@@ -8,6 +8,7 @@
       "save": "Speichern",
       "delete": "Löschen",
       "refresh": "Aktualisieren",
+      "apply": "Anwenden",
       "submit": "Absenden",
       "signIn": "Anmelden",
       "signOut": "Abmelden",
@@ -43,6 +44,7 @@
       "howToUse": "Anleitung",
       "exportCSV": "CSV exportieren",
       "downloadCSV": "CSV herunterladen",
+      "selectPreviewRow": "Auswahl der Vorschauzeile",
       "confirmImport": "Import bestätigen",
       "manualMatching": "Manuelle Zuordnung",
       "createManualMatch": "Manuelle Zuordnung erstellen",
@@ -121,6 +123,10 @@
       "rules": "Regeln",
       "readyToImportCount": "Bereit zum Importieren von {count} Transaktionen",
       "rowError": "Zeile {row}: {message}",
+      "row": "Zeile",
+      "loadedRowsCount": "{loaded} von {total} Zeilen geladen",
+      "selectPreviewRow": "Vorschauzeile wählen",
+      "previewRowNumber": "Vorschauzeile {row}",
       "enterTan": "TAN eingeben",
       "search": "Suchen",
       "manualMatch": "Manuelle Zuordnung"
@@ -200,6 +206,7 @@
       "dragAndDropDesc": "Blöcke werden von oben nach unten verarbeitet. Ziehen Sie zum Ändern der Reihenfolge.",
       "saveConfiguration": "Ihre Konfiguration speichern",
       "configureMappingToPreview": "Konfigurieren Sie Ihre Spaltenzuordnung, um eine Vorschau zu sehen",
+      "selectPreviewRowDesc": "Wählen Sie eine Quellzeile aus, um zu prüfen, wie sich die aktuellen Transformationsblöcke verhalten.",
       "configureEachColumnDesc": "Jede Karte repräsentiert ein Firefly III-Feld. Fügen Sie Transformationsblöcke hinzu, um Ihre CSV-Daten zuzuordnen.",
       "saveConfigurationDesc": "Verwenden Sie \"Konfiguration speichern\", um Ihre Zuordnung für die Wiederverwendung mit ähnlichen Bankexporten zu exportieren."
     },
@@ -535,6 +542,7 @@
       "configLoaded": "Konfiguration geladen!",
       "configLoadedWithOptions": "Konfiguration geladen! CSV-Optionen und Zuordnungen angewendet.",
       "csvDownloaded": "CSV erfolgreich heruntergeladen!",
+      "failedToSaveConfig": "Fehler beim Speichern der Konfiguration",
       "failedToDownload": "Fehler beim Herunterladen der CSV",
       "successfullyImported": "{count} Transaktion(en) erfolgreich importiert!",
       "failedToImport": "Fehler beim Importieren von Transaktionen",
@@ -596,6 +604,7 @@
         "failedToFetch": "Fehler beim Abrufen von Transaktionen",
         "configLoaded": "Konfiguration erfolgreich geladen",
         "failedToLoadConfig": "Fehler beim Laden der Konfiguration",
+        "failedToSaveConfig": "FinTS-Konfiguration konnte nicht gespeichert werden",
         "configLoadedEnterPin": "Konfiguration geladen! Geben Sie Ihre PIN ein, um sich zu verbinden."
       }
     },

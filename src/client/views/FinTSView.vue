@@ -233,32 +233,10 @@
 
               <!-- Table when data exists -->
               <template v-else>
-                <div class="preview-table-container">
-                  <v-table density="compact" class="preview-table">
-                    <thead>
-                      <tr>
-                        <th v-for="header in previewHeaders" :key="header">{{ header }}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(row, rowIdx) in previewRows" :key="rowIdx">
-                        <td v-for="(cell, cellIdx) in row" :key="cellIdx" class="text-truncate">
-                          {{ cell || '—' }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </div>
-                <div
-                  v-if="fintsTransactions.length > 10"
-                  class="text-center text-caption text-medium-emphasis pt-3"
-                >
-                  {{
-                    t('common.labels.showingFirst10Transactions', {
-                      total: fintsTransactions.length,
-                    })
-                  }}
-                </div>
+                <LazyPreviewTable
+                  :headers="previewHeaders"
+                  :rows="converter.parsedCSV.value?.rows || []"
+                />
               </template>
             </v-card-text>
           </v-card>
@@ -369,6 +347,25 @@
               </v-menu>
             </div>
             <div class="d-flex align-center ga-2">
+              <v-chip
+                v-if="converter.parsedCSV.value?.rows.length"
+                size="small"
+                color="primary"
+                variant="tonal"
+              >
+                {{
+                  t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 })
+                }}
+              </v-chip>
+              <v-btn
+                variant="tonal"
+                size="small"
+                prepend-icon="mdi-table-search"
+                :disabled="!converter.parsedCSV.value?.rows.length"
+                @click="showPreviewRowDialog = true"
+              >
+                {{ t('common.buttons.selectPreviewRow') }}
+              </v-btn>
               <v-btn icon variant="text" size="small" color="info" @click="showHelpDialog = true">
                 <v-icon>mdi-help-circle-outline</v-icon>
                 <v-tooltip activator="parent" location="bottom">{{
@@ -474,6 +471,14 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
+        <PreviewRowSelectorDialog
+          v-model="showPreviewRowDialog"
+          :headers="previewHeaders"
+          :rows="converter.parsedCSV.value?.rows || []"
+          :selected-row-index="converter.previewRowIndex.value"
+          @select="converter.setPreviewRowIndex"
+        />
       </template>
 
       <!-- Step 3: Preview & Export -->
@@ -537,24 +542,11 @@
               </v-alert>
 
               <!-- Preview Table -->
-              <div v-if="converter.preview.value" class="preview-table-container">
-                <v-table density="compact" class="preview-table">
-                  <thead>
-                    <tr>
-                      <th v-for="header in converter.preview.value.headers" :key="header">
-                        {{ header }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(row, idx) in converter.preview.value.rows" :key="idx">
-                      <td v-for="(cell, cellIdx) in row" :key="cellIdx" class="text-truncate">
-                        {{ cell || '—' }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </v-table>
-              </div>
+              <LazyPreviewTable
+                v-if="converter.preview.value"
+                :headers="converter.preview.value.headers"
+                :rows="converter.preview.value.rows"
+              />
 
               <EmptyState
                 v-else
@@ -893,9 +885,15 @@ import type {
 } from '@shared/types/app';
 import type { ImportValidation } from '@shared/types/converter';
 import { FIREFLY_COLUMNS } from '@shared/types/converter';
-import { WizardStepper, EmptyState } from '../components';
+import {
+  WizardStepper,
+  EmptyState,
+  LazyPreviewTable,
+  PreviewRowSelectorDialog,
+} from '../components';
 import { SwimlaneCard } from '../components/converter';
 import { useProgress, useConverter, useSnackbar } from '../composables';
+import { sanitizeFilenamePart, saveBlobWithDialog } from '../utils';
 
 // Types for bank list
 interface KnownBank {
@@ -962,6 +960,7 @@ const { showSnackbar } = useSnackbar();
 
 // Step 2 state
 const showHelpDialog = ref(false);
+const showPreviewRowDialog = ref(false);
 const configFileInput = ref<HTMLInputElement | null>(null);
 const fullConfigFileInput = ref<HTMLInputElement | null>(null);
 const swimlanesContainer = ref<InstanceType<typeof draggable> | null>(null);
@@ -1170,11 +1169,6 @@ const isDecoupledTan = computed(() => {
 const previewHeaders = computed(() =>
   FINTS_COLUMNS.map((col) => col.replace(/([A-Z])/g, ' $1').trim())
 );
-const previewRows = computed(() => {
-  if (!converter.parsedCSV.value) return [];
-  return converter.parsedCSV.value.rows.slice(0, 10);
-});
-
 // Source columns for swimlane mapping
 const sourceColumns = computed(() => FINTS_COLUMNS);
 
@@ -1333,6 +1327,7 @@ async function disconnect() {
   dialogState.value = null;
   selectedAccountIndex.value = 0;
   fintsTransactions.value = [];
+  showPreviewRowDialog.value = false;
 }
 
 // Fetch transactions from bank
@@ -1380,21 +1375,10 @@ async function fetchTransactions() {
 
 // Get swimlane preview value for step 2
 function getSwimlanePreviewValue(swimlaneId: string): string {
-  if (!converter.parsedCSV.value || converter.parsedCSV.value.rows.length === 0) {
+  if (!converter.preview.value) {
     return '';
   }
-
-  const swimlane = converter.config.value.swimlanes.find((s) => s.id === swimlaneId);
-  if (!swimlane || !swimlane.enabled) return '';
-
-  try {
-    const transformed = converter.getTransformedData();
-    if (transformed.length === 0) return '';
-    const firstRow = transformed[0];
-    return String(firstRow[swimlane.targetColumn as keyof typeof firstRow] || '');
-  } catch {
-    return '';
-  }
+  return converter.preview.value.swimlanePreviewValues[swimlaneId] || '';
 }
 
 // Get swimlane error for step 2
@@ -1435,7 +1419,15 @@ function onSwimlanesWheel(event: WheelEvent) {
 }
 
 // Save full config (including bank settings)
-function onSaveConfig() {
+function getFinTSConfigFilename(): string {
+  const identifier = sanitizeFilenamePart(
+    selectedAccount.value?.iban || selectedAccount.value?.accountNumber || ''
+  );
+
+  return identifier ? `fints-${identifier}-config.json` : 'fints-config.json';
+}
+
+async function onSaveConfig() {
   const converterConfig = JSON.parse(converter.saveConfig());
   const fullConfig = {
     version: '1.0',
@@ -1454,12 +1446,20 @@ function onSaveConfig() {
   };
   const json = JSON.stringify(fullConfig, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'fints-config.json';
-  a.click();
-  URL.revokeObjectURL(url);
+
+  try {
+    await saveBlobWithDialog(blob, {
+      suggestedName: getFinTSConfigFilename(),
+      description: 'JSON configuration',
+      mimeType: 'application/json',
+      extensions: ['.json'],
+    });
+  } catch (error) {
+    showSnackbar(
+      error instanceof Error ? error.message : t('views.fints.messages.failedToSaveConfig'),
+      'error'
+    );
+  }
 }
 
 // Load config (Stage 2 - converter only)
@@ -1809,25 +1809,6 @@ onBeforeRouteLeave((_to, _from, next) => {
 .data-preview-card {
   flex: 1;
   min-height: 300px;
-}
-
-.preview-table-container {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
-}
-
-.preview-table {
-  width: max-content;
-  min-width: 100%;
-}
-
-.preview-table th,
-.preview-table td {
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .swimlanes-container {

@@ -8,6 +8,7 @@
       "save": "Save",
       "delete": "Delete",
       "refresh": "Refresh",
+      "apply": "Apply",
       "submit": "Submit",
       "signIn": "Sign In",
       "signOut": "Sign Out",
@@ -43,6 +44,7 @@
       "howToUse": "How to use",
       "exportCSV": "Export CSV",
       "downloadCSV": "Download CSV",
+      "selectPreviewRow": "Preview Row Selection",
       "confirmImport": "Confirm Import",
       "manualMatching": "Manual Matching",
       "createManualMatch": "Create Manual Match",
@@ -121,6 +123,10 @@
       "rules": "Rules",
       "readyToImportCount": "Ready to import {count} transactions",
       "rowError": "Row {row}: {message}",
+      "row": "Row",
+      "loadedRowsCount": "Loaded {loaded} of {total} rows",
+      "selectPreviewRow": "Select Preview Row",
+      "previewRowNumber": "Preview row {row}",
       "enterTan": "Enter TAN",
       "search": "Search",
       "manualMatch": "Manual Match"
@@ -200,6 +206,7 @@
       "dragAndDropDesc": "Blocks are processed top to bottom. Drag to change the order.",
       "saveConfiguration": "Save your configuration",
       "configureMappingToPreview": "Configure your column mapping to see a preview",
+      "selectPreviewRowDesc": "Choose a source row to inspect how the current transformation blocks behave.",
       "configureEachColumnDesc": "Each card represents a Firefly III field. Add transformation blocks to map your CSV data.",
       "saveConfigurationDesc": "Use \"Save Config\" to export your mapping for reuse with similar bank exports."
     },
@@ -535,6 +542,7 @@
       "configLoaded": "Configuration loaded!",
       "configLoadedWithOptions": "Configuration loaded! CSV options and mappings applied.",
       "csvDownloaded": "CSV downloaded successfully!",
+      "failedToSaveConfig": "Failed to save configuration",
       "failedToDownload": "Failed to download CSV",
       "successfullyImported": "Successfully imported {count} transaction(s)!",
       "failedToImport": "Failed to import transactions",
@@ -596,6 +604,7 @@
         "failedToFetch": "Failed to fetch transactions",
         "configLoaded": "Configuration loaded successfully",
         "failedToLoadConfig": "Failed to load configuration",
+        "failedToSaveConfig": "Could not save FinTS configuration",
         "configLoadedEnterPin": "Configuration loaded! Enter your PIN to connect."
       }
     },
