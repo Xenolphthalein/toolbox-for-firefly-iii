@@ -21,7 +21,7 @@
 export { FinTSClient } from './client.js';
 
 // Re-export constants
-export { FINTS_VERSION, PRODUCT_ID, DIALOG_LANGUAGE, KNOWN_BANKS } from './constants.js';
+export { FINTS_VERSION, PRODUCT_ID, DIALOG_LANGUAGE } from './constants.js';
 
 // Re-export types (from shared types)
 export type {

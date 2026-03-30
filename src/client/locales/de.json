@@ -558,6 +558,7 @@
       },
       "bankConnection": "Bankverbindung",
       "bankSelection": "Bankauswahl",
+      "bankDataSourceTooltip": "Banknamen und FinTS-URLs in diesem Auswahlfeld werden beim Serverstart von aqbanking heruntergeladen. Bitte prüfen Sie das Ergebnis bei Bedarf mit Ihrer Bank.",
       "selectYourBank": "Wählen Sie Ihre Bank",
       "selectBank": "Bank auswählen",
       "loginData": "Anmeldedaten",

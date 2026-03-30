@@ -387,6 +387,19 @@ export interface CreateSubscriptionRequest {
 export type CreateRecurringRequest = CreateSubscriptionRequest;
 
 // FinTS Importer Types
+export interface FinTSBankInfo {
+  /** German bank code (BLZ) */
+  blz: string;
+  /** Bank name from aqbanking */
+  name: string;
+  /** FinTS endpoint URL */
+  url: string;
+  /** BIC if available */
+  bic?: string;
+  /** City if available */
+  city?: string;
+}
+
 export interface FinTSConfig {
   /** Bank BLZ/BIC */
   bankCode: string;

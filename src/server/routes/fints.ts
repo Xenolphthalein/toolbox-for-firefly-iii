@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { FinTSClient, KNOWN_BANKS } from '../clients/fints/index.js';
+import { FinTSClient } from '../clients/fints/index.js';
 import { getFireflyApi } from '../clients/firefly.js';
-import { getFinTSClientStore, getFinTSDialogStateStore } from '../services/index.js';
+import {
+  getFinTSBankIndex,
+  getFinTSClientStore,
+  getFinTSDialogStateStore,
+} from '../services/index.js';
 import { isFireflyConfigured, isFinTSConfigured, config } from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
 import { asyncHandler, badRequest, getPersistedSessionId, setupSSE } from '../middleware/index.js';
@@ -76,12 +80,7 @@ router.use((_req: Request, _res: Response, next) => {
 router.get(
   '/banks',
   asyncHandler(async (_req: Request, res: Response) => {
-    const banks = Object.entries(KNOWN_BANKS).map(([blz, info]) => ({
-      blz,
-      name: info.name,
-      url: info.url,
-    }));
-
+    const banks = await getFinTSBankIndex();
     res.json({ success: true, data: banks });
   })
 );
