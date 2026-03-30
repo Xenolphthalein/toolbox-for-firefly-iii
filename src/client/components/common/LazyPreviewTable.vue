@@ -221,4 +221,8 @@ watch(
 .preview-table-container::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--v-border-color), 0.5);
 }
+
+.preview-table-container::-webkit-scrollbar-corner {
+  background: transparent;
+}
 </style>
