@@ -16,7 +16,9 @@ export {
   getCurrentUser,
   setAuthenticatedUser,
   clearAuthenticatedUser,
+  ensureSessionPersistence,
   getSessionId,
+  getPersistedSessionId,
 } from './auth.js';
 
 export {

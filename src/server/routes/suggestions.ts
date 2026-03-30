@@ -3,7 +3,7 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { AISuggestionService } from '../services/aiSuggestions.js';
 import { isFireflyConfigured, isAIConfigured } from '../config/index.js';
 import {
-  getSessionId,
+  getPersistedSessionId,
   asyncHandler,
   badRequest,
   setupSSE,
@@ -142,7 +142,7 @@ router.post(
     }
 
     const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const filterKey = serializeTransactionFilters(filters);
     const cacheKey = getCacheKey(startDate, endDate, `uncategorized-${filterKey}`);
 
@@ -187,7 +187,7 @@ router.post(
     }
 
     const { startDate, endDate, filters, options } = req.body as SuggestionRequestBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const filterKey = serializeTransactionFilters(filters);
     const cacheKey = getCacheKey(startDate, endDate, `untagged-${filterKey}`);
 
@@ -324,7 +324,7 @@ router.post(
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, filters, limit, offset } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const filterKey = serializeTransactionFilters(filters);
     const cacheKey = getCacheKey(startDate, endDate, `uncategorized-${filterKey}`);
 
@@ -359,7 +359,7 @@ router.post(
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, filters, limit, offset } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const filterKey = serializeTransactionFilters(filters);
     const cacheKey = getCacheKey(startDate, endDate, `untagged-${filterKey}`);
 

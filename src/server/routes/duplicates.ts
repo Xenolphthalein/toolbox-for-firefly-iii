@@ -3,7 +3,7 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { DuplicateTransactionFinder } from '../services/duplicateFinder.js';
 import { isFireflyConfigured } from '../config/index.js';
 import {
-  getSessionId,
+  getPersistedSessionId,
   asyncHandler,
   badRequest,
   setupSSE,
@@ -46,7 +46,7 @@ router.post(
   validateBody(duplicateFindSchema),
   async (req: Request, res: Response) => {
     const { startDate, endDate, options } = req.body as DuplicateFindBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const cacheKey = getCacheKey(startDate, endDate);
 
     logger.debug(`Stream find duplicates started`, { startDate, endDate, options });
@@ -173,7 +173,7 @@ router.post(
   validateBody(countTransactionsSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, limit, offset } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const cacheKey = getCacheKey(startDate, endDate);
 
     const fireflyApi = getFireflyApi();

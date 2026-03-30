@@ -19,6 +19,8 @@ declare module 'express-session' {
     oauthState?: string;
     /** OIDC code verifier for PKCE */
     codeVerifier?: string;
+    /** Marks sessions that must be persisted for server-side session-scoped state */
+    persistedSessionId?: string;
   }
 }
 
@@ -121,7 +123,30 @@ export function clearAuthenticatedUser(req: Request, callback?: (err?: Error) =>
  * This replaces the client-controlled x-session-id header for security.
  */
 export function getSessionId(req: Request): string {
-  // Express session is initialized by createSessionMiddleware before routes
-  // req.session.id is always available after session middleware runs
   return req.session.id;
+}
+
+/**
+ * Ensure the current Express session is persisted and its cookie is sent back.
+ *
+ * With `saveUninitialized: false`, express-session only saves a new session
+ * and emits the cookie if the session has been modified. Routes that keep
+ * server-side state in memory keyed by `req.session.id` need that cookie to
+ * survive the next request, otherwise a new empty session will be created and
+ * the state becomes unreachable.
+ */
+export function ensureSessionPersistence(req: Request): void {
+  if (req.session.persistedSessionId !== req.session.id) {
+    req.session.persistedSessionId = req.session.id;
+  }
+}
+
+/**
+ * Get the current session ID and ensure the session is persisted first.
+ * Use this for caches, upload state, extenders, and other server-side
+ * state keyed by the session ID.
+ */
+export function getPersistedSessionId(req: Request): string {
+  ensureSessionPersistence(req);
+  return getSessionId(req);
 }

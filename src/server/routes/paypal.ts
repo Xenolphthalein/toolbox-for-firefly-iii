@@ -4,7 +4,7 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { PayPalExtender, getPayPalExtenderStore } from '../services/index.js';
 import { isFireflyConfigured } from '../config/index.js';
 import {
-  getSessionId,
+  getPersistedSessionId,
   asyncHandler,
   badRequest,
   setupSSE,
@@ -101,7 +101,7 @@ router.post(
       throw badRequest(validation.error || 'Invalid file content');
     }
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     // Parse the CSV file
@@ -133,7 +133,7 @@ router.post(
 
     logger.debug('Received PayPal CSV content upload');
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     // Parse and load transactions
@@ -154,7 +154,7 @@ router.post(
 
 // Get loaded transactions
 router.get('/transactions', (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const sessionId = getPersistedSessionId(req);
   const extender = getExtender(sessionId);
   const transactions = extender.getLoadedTransactions();
 
@@ -166,7 +166,7 @@ router.get('/transactions', (req: Request, res: Response) => {
 
 // Clear loaded transactions
 router.delete('/transactions', (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const sessionId = getPersistedSessionId(req);
   const extender = getExtender(sessionId);
   extender.clearTransactions();
 
@@ -182,7 +182,7 @@ router.post(
   validateBody(dateRangeSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate } = req.body as DateRangeBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.debug('Finding Firefly transactions for PayPal match', { startDate, endDate });
 
@@ -212,7 +212,7 @@ router.post(
       limit,
       offset,
     } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     const transactions = await extender.findPayPalTransactions(startDate, endDate);
@@ -245,7 +245,7 @@ router.post(
   validateBody(paypalMatchSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, excludeProcessed = true } = req.body as PayPalMatchBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.info('Starting PayPal match (non-streaming)', { startDate, endDate, excludeProcessed });
 
@@ -274,7 +274,7 @@ router.post(
   validateBody(paypalMatchSchema),
   async (req: Request, res: Response) => {
     const { startDate, endDate, excludeProcessed = true } = req.body as PayPalMatchBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.info('Starting PayPal match stream', { startDate, endDate, excludeProcessed });
 
@@ -313,7 +313,7 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { matches } = req.body as PayPalApplyBody;
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     const result = await extender.applyDescriptions(matches);

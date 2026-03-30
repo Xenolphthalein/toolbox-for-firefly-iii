@@ -4,7 +4,7 @@ import { getFireflyApi } from '../clients/firefly.js';
 import { AmazonOrderExtender, getAmazonExtenderStore } from '../services/index.js';
 import { isFireflyConfigured } from '../config/index.js';
 import {
-  getSessionId,
+  getPersistedSessionId,
   asyncHandler,
   badRequest,
   setupSSE,
@@ -96,7 +96,7 @@ router.post(
       throw badRequest(validation.error || 'Invalid file content');
     }
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     // Parse the JSON file asynchronously to avoid blocking the event loop
@@ -139,7 +139,7 @@ router.post(
       throw badRequest('No order data provided');
     }
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     // Parse and load orders
@@ -160,7 +160,7 @@ router.post(
 
 // Get loaded orders
 router.get('/orders', (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const sessionId = getPersistedSessionId(req);
   const extender = getExtender(sessionId);
   const orders = extender.getLoadedOrders();
 
@@ -172,7 +172,7 @@ router.get('/orders', (req: Request, res: Response) => {
 
 // Clear loaded orders
 router.delete('/orders', (req: Request, res: Response) => {
-  const sessionId = getSessionId(req);
+  const sessionId = getPersistedSessionId(req);
   const extender = getExtender(sessionId);
   extender.clearOrders();
 
@@ -188,7 +188,7 @@ router.post(
   validateBody(dateRangeSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate } = req.body as DateRangeBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.debug('Finding Amazon transactions', { startDate, endDate });
 
@@ -218,7 +218,7 @@ router.post(
       limit,
       offset,
     } = req.body as CountTransactionsBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     const transactions = await extender.findAmazonTransactions(startDate, endDate);
@@ -251,7 +251,7 @@ router.post(
   validateBody(amazonMatchSchema),
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, excludeProcessed = true } = req.body as AmazonMatchBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.info('Starting Amazon match (non-streaming)', { startDate, endDate, excludeProcessed });
 
@@ -280,7 +280,7 @@ router.post(
   validateBody(amazonMatchSchema),
   async (req: Request, res: Response) => {
     const { startDate, endDate, excludeProcessed = true } = req.body as AmazonMatchBody;
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
 
     logger.info('Starting Amazon match stream', { startDate, endDate, excludeProcessed });
 
@@ -319,7 +319,7 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { matches } = req.body as AmazonApplyBody;
 
-    const sessionId = getSessionId(req);
+    const sessionId = getPersistedSessionId(req);
     const extender = getExtender(sessionId);
 
     const result = await extender.applyDescriptions(matches);
