@@ -21,6 +21,16 @@ export interface StreamEvent<T = unknown> {
 }
 
 export class AmazonOrderExtender {
+  private static readonly MATCH_THRESHOLD = 0.5;
+  private static readonly AMOUNT_TOLERANCE_PERCENT = 0.05;
+  private static readonly ORDER_ID_MATCH_WEIGHT = 0.7;
+  private static readonly AMOUNT_MATCH_WEIGHT = 0.25;
+  private static readonly EXACT_AMOUNT_BONUS_WEIGHT = 0.2;
+  private static readonly DATE_PROXIMITY_MAX_WEIGHT = 0.2;
+  private static readonly ITEM_TITLE_MATCH_WEIGHT = 0.05;
+  private static readonly AUTO_MATCH_MAX_DATE_DISTANCE_DAYS = 3;
+  private static readonly AMBIGUOUS_FALLBACK_DELTA = 0.05;
+
   private fireflyApi: FireflyApiClient;
   private amazonOrders: AmazonOrder[] = [];
   private cachedAmazonTransactions: FireflyTransaction[] | null = null;
@@ -235,6 +245,7 @@ export class AmazonOrderExtender {
       let bestMatch: AmazonOrder | null = null;
       let bestConfidence = 0;
       let bestBreakdown: AmazonMatchResult['confidenceBreakdown'] = undefined;
+      let runnerUpConfidence = 0;
 
       for (const order of this.amazonOrders) {
         const { confidence, breakdown } = this.calculateMatchConfidence(
@@ -244,11 +255,31 @@ export class AmazonOrderExtender {
           order
         );
 
-        if (confidence > bestConfidence && confidence > 0.5) {
+        if (confidence > bestConfidence) {
+          runnerUpConfidence = bestConfidence;
+        }
+
+        if (confidence > bestConfidence && confidence > AmazonOrderExtender.MATCH_THRESHOLD) {
           bestConfidence = confidence;
           bestMatch = order;
           bestBreakdown = breakdown;
+        } else if (
+          confidence > runnerUpConfidence &&
+          confidence > AmazonOrderExtender.MATCH_THRESHOLD
+        ) {
+          runnerUpConfidence = confidence;
         }
+      }
+
+      if (
+        bestMatch &&
+        bestBreakdown &&
+        bestBreakdown.orderIdMatch === 0 &&
+        bestConfidence - runnerUpConfidence <= AmazonOrderExtender.AMBIGUOUS_FALLBACK_DELTA
+      ) {
+        bestMatch = null;
+        bestConfidence = 0;
+        bestBreakdown = undefined;
       }
 
       const result: AmazonMatchResult = createAmazonMatchResult({
@@ -314,31 +345,36 @@ export class AmazonOrderExtender {
     // Check if order ID appears in description - this is a very strong indicator
     const hasOrderId = order.orderId && description.includes(order.orderId);
     if (hasOrderId) {
-      breakdown.orderIdMatch = 0.7; // Order ID is unique, strong match
+      breakdown.orderIdMatch = AmazonOrderExtender.ORDER_ID_MATCH_WEIGHT;
     }
 
     // Check amount match (within 5%)
     const amountDiff = Math.abs(transactionAmount - order.totalAmount);
-    const amountTolerance = order.totalAmount * 0.05;
+    const amountTolerance = order.totalAmount * AmazonOrderExtender.AMOUNT_TOLERANCE_PERCENT;
+    const hasExactAmount = amountDiff === 0;
 
     if (amountDiff <= amountTolerance) {
-      breakdown.amountMatch = 0.2;
-      if (amountDiff === 0) {
-        breakdown.exactAmountBonus = 0.1; // Exact match bonus
+      breakdown.amountMatch = AmazonOrderExtender.AMOUNT_MATCH_WEIGHT;
+      if (hasExactAmount) {
+        breakdown.exactAmountBonus = AmazonOrderExtender.EXACT_AMOUNT_BONUS_WEIGHT;
       }
     } else if (!hasOrderId) {
       // Amount must match if we don't have order ID
       return { confidence: 0, breakdown };
     }
 
-    // Check date proximity (within 7 days)
-    const orderDate = new Date(order.orderDate);
-    const daysDiff = Math.abs(
-      (transactionDate.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const daysDiff = this.getCalendarDayDifference(transactionDate, new Date(order.orderDate));
 
-    if (daysDiff <= 7) {
-      breakdown.dateProximity = 0.1 * (1 - daysDiff / 7);
+    if (daysDiff <= AmazonOrderExtender.AUTO_MATCH_MAX_DATE_DISTANCE_DAYS) {
+      breakdown.dateProximity =
+        AmazonOrderExtender.DATE_PROXIMITY_MAX_WEIGHT *
+        (1 - daysDiff / AmazonOrderExtender.AUTO_MATCH_MAX_DATE_DISTANCE_DAYS);
+    } else if (!hasOrderId) {
+      return { confidence: 0, breakdown };
+    }
+
+    if (!hasOrderId && !hasExactAmount) {
+      return { confidence: 0, breakdown };
     }
 
     // Check if any item title appears in description
@@ -346,7 +382,7 @@ export class AmazonOrderExtender {
       const words = item.title.split(' ').filter((w) => w.length > 4);
       for (const word of words) {
         if (description.toLowerCase().includes(word.toLowerCase())) {
-          breakdown.itemTitleMatch = 0.05;
+          breakdown.itemTitleMatch = AmazonOrderExtender.ITEM_TITLE_MATCH_WEIGHT;
           break;
         }
       }
@@ -363,6 +399,21 @@ export class AmazonOrderExtender {
     );
 
     return { confidence, breakdown };
+  }
+
+  private getCalendarDayDifference(firstDate: Date, secondDate: Date): number {
+    const firstUtc = Date.UTC(
+      firstDate.getUTCFullYear(),
+      firstDate.getUTCMonth(),
+      firstDate.getUTCDate()
+    );
+    const secondUtc = Date.UTC(
+      secondDate.getUTCFullYear(),
+      secondDate.getUTCMonth(),
+      secondDate.getUTCDate()
+    );
+
+    return Math.abs(firstUtc - secondUtc) / (1000 * 60 * 60 * 24);
   }
 
   /**

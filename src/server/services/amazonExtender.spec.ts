@@ -278,9 +278,7 @@ describe('AmazonOrderExtender', () => {
       expect((resultEvents[0].data as any).matchConfidence).toBeGreaterThan(0.5);
     });
 
-    it('should match by amount and date when no order ID', async () => {
-      // Without order ID in description, confidence is low (amountMatch + dateProximity < 0.5)
-      // so there will be no match
+    it('should match by exact amount and nearby date when no order ID is present', async () => {
       const orders = [
         createMockOrder('123', 29.99, '2024-01-15', [{ title: 'Item', price: 29.99 }]),
       ];
@@ -296,7 +294,47 @@ describe('AmazonOrderExtender', () => {
 
       const resultEvents = events.filter((e) => e.type === 'result');
       expect(resultEvents).toHaveLength(1);
-      // Without order ID in description, confidence is below threshold, so no match
+      expect((resultEvents[0].data as any).matchedOrder?.orderId).toBe('123');
+      expect((resultEvents[0].data as any).matchConfidence).toBeGreaterThan(0.5);
+      expect((resultEvents[0].data as any).confidenceBreakdown?.orderIdMatch).toBe(0);
+    });
+
+    it('should not match by amount alone when date is too far away', async () => {
+      const orders = [
+        createMockOrder('123', 29.99, '2024-01-15', [{ title: 'Item', price: 29.99 }]),
+      ];
+      extender.loadOrders(orders);
+
+      const transactions = [createMockTransaction('1', 'Amazon Purchase', '29.99', '2024-01-20')];
+      (mockApi.getAllTransactions as ReturnType<typeof vi.fn>).mockResolvedValue(transactions);
+
+      const events = [];
+      for await (const event of extender.streamMatchTransactionsWithOrders()) {
+        events.push(event);
+      }
+
+      const resultEvents = events.filter((e) => e.type === 'result');
+      expect(resultEvents).toHaveLength(1);
+      expect((resultEvents[0].data as any).matchedOrder).toBeNull();
+    });
+
+    it('should avoid ambiguous fallback matches without an order ID', async () => {
+      const orders = [
+        createMockOrder('123', 29.99, '2024-01-15', [{ title: 'First Item', price: 29.99 }]),
+        createMockOrder('456', 29.99, '2024-01-17', [{ title: 'Second Item', price: 29.99 }]),
+      ];
+      extender.loadOrders(orders);
+
+      const transactions = [createMockTransaction('1', 'Amazon Purchase', '29.99', '2024-01-16')];
+      (mockApi.getAllTransactions as ReturnType<typeof vi.fn>).mockResolvedValue(transactions);
+
+      const events = [];
+      for await (const event of extender.streamMatchTransactionsWithOrders()) {
+        events.push(event);
+      }
+
+      const resultEvents = events.filter((e) => e.type === 'result');
+      expect(resultEvents).toHaveLength(1);
       expect((resultEvents[0].data as any).matchedOrder).toBeNull();
     });
 
