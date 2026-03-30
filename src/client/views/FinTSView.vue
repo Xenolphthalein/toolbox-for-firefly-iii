@@ -69,12 +69,7 @@
                     <template #append-inner>
                       <v-tooltip location="top" max-width="320">
                         <template #activator="{ props: tooltipProps }">
-                          <v-icon
-                            v-bind="tooltipProps"
-                            size="18"
-                            color="info"
-                            class="mr-1"
-                          >
+                          <v-icon v-bind="tooltipProps" size="18" color="info" class="mr-1">
                             mdi-information-outline
                           </v-icon>
                         </template>
