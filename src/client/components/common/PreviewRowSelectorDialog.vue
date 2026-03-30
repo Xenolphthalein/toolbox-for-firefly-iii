@@ -119,10 +119,7 @@ function onFilteredRowClick(filteredRowIndex: number): void {
 watch(
   () => [props.modelValue, props.selectedRowIndex, props.rows.length] as const,
   () => {
-    pendingRowIndex.value = Math.min(
-      props.selectedRowIndex,
-      Math.max(props.rows.length - 1, 0)
-    );
+    pendingRowIndex.value = Math.min(props.selectedRowIndex, Math.max(props.rows.length - 1, 0));
     searchQuery.value = '';
   },
   { immediate: true }

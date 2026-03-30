@@ -233,7 +233,10 @@
 
               <!-- Table when data exists -->
               <template v-else>
-                <LazyPreviewTable :headers="previewHeaders" :rows="converter.parsedCSV.value?.rows || []" />
+                <LazyPreviewTable
+                  :headers="previewHeaders"
+                  :rows="converter.parsedCSV.value?.rows || []"
+                />
               </template>
             </v-card-text>
           </v-card>
@@ -350,7 +353,9 @@
                 color="primary"
                 variant="tonal"
               >
-                {{ t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 }) }}
+                {{
+                  t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 })
+                }}
               </v-chip>
               <v-btn
                 variant="tonal"
@@ -880,7 +885,12 @@ import type {
 } from '@shared/types/app';
 import type { ImportValidation } from '@shared/types/converter';
 import { FIREFLY_COLUMNS } from '@shared/types/converter';
-import { WizardStepper, EmptyState, LazyPreviewTable, PreviewRowSelectorDialog } from '../components';
+import {
+  WizardStepper,
+  EmptyState,
+  LazyPreviewTable,
+  PreviewRowSelectorDialog,
+} from '../components';
 import { SwimlaneCard } from '../components/converter';
 import { useProgress, useConverter, useSnackbar } from '../composables';
 import { sanitizeFilenamePart, saveBlobWithDialog } from '../utils';

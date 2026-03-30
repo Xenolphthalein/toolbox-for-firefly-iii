@@ -212,7 +212,9 @@
                 color="primary"
                 variant="tonal"
               >
-                {{ t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 }) }}
+                {{
+                  t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 })
+                }}
               </v-chip>
               <v-btn
                 variant="tonal"
@@ -400,11 +402,11 @@
               </v-alert>
 
               <!-- Preview Table -->
-                <LazyPreviewTable
-                  v-if="converter.preview.value"
-                  :headers="converter.preview.value.headers"
-                  :rows="converter.preview.value.rows"
-                />
+              <LazyPreviewTable
+                v-if="converter.preview.value"
+                :headers="converter.preview.value.headers"
+                :rows="converter.preview.value.rows"
+              />
 
               <EmptyState
                 v-else
