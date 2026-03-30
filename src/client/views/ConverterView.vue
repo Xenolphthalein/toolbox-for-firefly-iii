@@ -154,34 +154,10 @@
 
               <!-- Table when data exists -->
               <template v-else>
-                <div class="preview-table-container">
-                  <v-table density="compact" class="preview-table">
-                    <thead>
-                      <tr>
-                        <th v-for="header in converter.parsedCSV.value.headers" :key="header">
-                          {{ header }}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(row, rowIdx) in previewRows" :key="rowIdx">
-                        <td v-for="(cell, cellIdx) in row" :key="cellIdx" class="text-truncate">
-                          {{ cell || '—' }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </div>
-                <div
-                  v-if="converter.parsedCSV.value.rows.length > 10"
-                  class="text-center text-caption text-medium-emphasis pt-3"
-                >
-                  {{
-                    t('views.converter.showingFirstRows', {
-                      count: converter.parsedCSV.value.rows.length,
-                    })
-                  }}
-                </div>
+                <LazyPreviewTable
+                  :headers="converter.parsedCSV.value.headers"
+                  :rows="converter.parsedCSV.value.rows"
+                />
               </template>
             </v-card-text>
           </v-card>
@@ -230,6 +206,23 @@
               </v-menu>
             </div>
             <div class="d-flex align-center ga-2">
+              <v-chip
+                v-if="converter.parsedCSV.value?.rows.length"
+                size="small"
+                color="primary"
+                variant="tonal"
+              >
+                {{ t('common.labels.previewRowNumber', { row: converter.previewRowIndex.value + 1 }) }}
+              </v-chip>
+              <v-btn
+                variant="tonal"
+                size="small"
+                prepend-icon="mdi-table-search"
+                :disabled="!converter.parsedCSV.value?.rows.length"
+                @click="showPreviewRowDialog = true"
+              >
+                {{ t('common.buttons.selectPreviewRow') }}
+              </v-btn>
               <v-btn icon variant="text" size="small" color="info" @click="showHelpDialog = true">
                 <v-icon>mdi-help-circle-outline</v-icon>
                 <v-tooltip activator="parent" location="bottom">{{
@@ -332,6 +325,14 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
+        <PreviewRowSelectorDialog
+          v-model="showPreviewRowDialog"
+          :headers="converter.parsedCSV.value?.headers || []"
+          :rows="converter.parsedCSV.value?.rows || []"
+          :selected-row-index="converter.previewRowIndex.value"
+          @select="converter.setPreviewRowIndex"
+        />
       </template>
 
       <!-- Step 3: Preview & Export -->
@@ -399,24 +400,11 @@
               </v-alert>
 
               <!-- Preview Table -->
-              <div v-if="converter.preview.value" class="preview-table-container">
-                <v-table density="compact" class="preview-table">
-                  <thead>
-                    <tr>
-                      <th v-for="header in converter.preview.value.headers" :key="header">
-                        {{ header }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(row, idx) in converter.preview.value.rows" :key="idx">
-                      <td v-for="(cell, cellIdx) in row" :key="cellIdx" class="text-truncate">
-                        {{ cell || '—' }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </v-table>
-              </div>
+                <LazyPreviewTable
+                  v-if="converter.preview.value"
+                  :headers="converter.preview.value.headers"
+                  :rows="converter.preview.value.rows"
+                />
 
               <EmptyState
                 v-else
@@ -837,7 +825,13 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import draggable from 'vuedraggable';
-import { WizardStepper, FileUploadCard, EmptyState } from '../components/common';
+import {
+  WizardStepper,
+  FileUploadCard,
+  EmptyState,
+  LazyPreviewTable,
+  PreviewRowSelectorDialog,
+} from '../components/common';
 import { SwimlaneCard } from '../components/converter';
 import { useConverter } from '../composables/useConverter';
 import { saveBlobWithDialog } from '../utils';
@@ -884,6 +878,7 @@ const showError = ref(false);
 const showSuccess = ref(false);
 const successMessage = ref('');
 const showHelpDialog = ref(false);
+const showPreviewRowDialog = ref(false);
 const showImportDialog = ref(false);
 const showImportResultsDialog = ref(false);
 const importResults = ref<{ successful: number; failed: number; errors: string[] } | null>(null);
@@ -977,10 +972,6 @@ const statusColor = computed(() => {
     return converter.parsedCSV.value.rows.length > 0 ? 'success' : 'warning';
   }
   return '';
-});
-
-const previewRows = computed(() => {
-  return converter.parsedCSV.value?.rows.slice(0, 10) || [];
 });
 
 const sourceColumns = computed(() => {
@@ -1090,6 +1081,7 @@ function onStepNext(step: number) {
 function onReset() {
   currentStep.value = 1;
   uploadFile.value = [];
+  showPreviewRowDialog.value = false;
   converter.reset();
 }
 
@@ -1231,13 +1223,6 @@ async function onImportToFirefly() {
   background: rgba(var(--v-border-color), 0.5);
 }
 
-.preview-table-container {
-  overflow: auto;
-  border: 1px solid rgba(var(--v-border-color), 0.2);
-  border-radius: 8px;
-  min-height: 100px;
-}
-
 .step-1-content {
   display: flex;
   flex-direction: column;
@@ -1264,28 +1249,6 @@ async function onImportToFirefly() {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.preview-card .preview-table-container {
-  flex: 1;
-}
-
-.preview-table {
-  min-width: 100%;
-}
-
-.preview-table th {
-  background: rgb(var(--v-theme-surface));
-  border-bottom: 1px solid rgba(var(--v-border-color), 0.3);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  color: rgb(var(--v-theme-primary));
-  font-weight: 600;
-}
-
-.preview-table td {
-  max-width: 200px;
 }
 
 /* Data preview table in step 1 */
