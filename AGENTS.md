@@ -250,5 +250,6 @@ Configuration via environment variables (see `.env.example` for full details):
 
 ### Other
 - `FINTS_PRODUCT_ID` - FinTS product registration ID for German bank imports
+- `FINTS_LOG_REDACTION` - Redact sensitive FinTS payloads in logs by default; set to `false` to disable explicitly for debugging
 - `DEFAULT_LOCALE` - Default language locale (`en` or `de`). Can also use `VITE_DEFAULT_LOCALE` for backward compatibility
 - `NUMBER_FORMAT_LOCALE` / `NUMBER_FORMAT_DECIMAL` / `NUMBER_FORMAT_THOUSANDS` - Number parsing settings

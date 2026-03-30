@@ -53,7 +53,11 @@ export async function sendRequest(url: string, message: string): Promise<string>
 
         // Check for HTTP errors
         if (res.statusCode && res.statusCode >= 400) {
-          logger.error(`HTTP error ${res.statusCode}: ${rawResponse.substring(0, 500)}`);
+          logger.error(`HTTP error ${res.statusCode}`, {
+            statusMessage: res.statusMessage,
+            contentType: res.headers['content-type'],
+            contentLength: rawResponse.length,
+          });
           reject(new Error(`HTTP error ${res.statusCode}: ${res.statusMessage}`));
           return;
         }
@@ -76,7 +80,7 @@ export async function sendRequest(url: string, message: string): Promise<string>
     });
 
     req.on('error', (error) => {
-      logger.error(`Request failed: ${error.message}`);
+      logger.error('Request failed', error);
       reject(new Error(`FinTS request failed: ${error.message}`));
     });
 

@@ -214,6 +214,7 @@ AI features (category and tag suggestions) require either OpenAI or a local Olla
 |----------|-------------|---------|
 | `DEFAULT_LOCALE` | Default language: `en` or `de` | Auto-detect from browser |
 | `FINTS_PRODUCT_ID` | FinTS registration ID for German bank imports | - |
+| `FINTS_LOG_REDACTION` | Redact sensitive FinTS payloads from logs. Set to `false` to disable explicitly. | `true` |
 | `LOG_LEVEL` | `error`, `warn`, `info`, or `debug` | `info` |
 | `NUMBER_FORMAT_LOCALE` | Locale for parsing numbers | `en-US` |
 | `NUMBER_FORMAT_DECIMAL` | Decimal separator | `.` |

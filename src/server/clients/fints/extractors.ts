@@ -113,7 +113,7 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
     // HITANS contains TAN method definitions embedded in colon-separated data
     // Format: HITANS:70:6:4+1+1+0+N:N:0:940:2:SealOne:Decoupled::DKB App:::DKB App:2048:...
     const elements = extractElements(segment);
-    logger.debug(`HITANS elements: ${JSON.stringify(elements)}`);
+    logger.debug(`HITANS response received with ${elements.length} top-level element(s)`);
 
     // The TAN methods are embedded within the last element(s) as colon-separated values
     // We need to find patterns like: <3-digit-id>:<1-digit-process>:<technical-name>:...
@@ -155,9 +155,7 @@ export function extractTanMethods(segments: Map<string, string[]>): FinTSTanMeth
 
         // Avoid duplicates
         if (!methods.find((m) => m.id === id)) {
-          logger.debug(
-            `Parsed TAN method: id=${id}, name=${name}, technical=${technicalName}, isDecoupled=${isDecoupled}`
-          );
+          logger.debug(`Parsed TAN method: id=${id}, isDecoupled=${isDecoupled}`);
 
           methods.push({
             id,
@@ -199,7 +197,7 @@ export function checkTanRequired(segments: Map<string, string[]>): FinTSTanReque
   if (!hitan) return null;
 
   const elements = extractElements(hitan);
-  logger.debug(`HITAN elements: ${JSON.stringify(elements)}`);
+  logger.debug(`HITAN response received with ${elements.length} element(s)`);
 
   // HITAN segment structure (version 6):
   // HITAN:4:6:5+4++<orderRef>+<challengeText>+++<tanMediumName>
@@ -216,9 +214,7 @@ export function checkTanRequired(segments: Map<string, string[]>): FinTSTanReque
   const orderRef = elements[3] || elements[2] || '';
   const challengeText = elements[4] || elements[3] || '';
 
-  logger.debug(
-    `HITAN parsed: process=${tanProcess}, orderRef=${orderRef}, challenge=${challengeText}`
-  );
+  logger.debug(`HITAN parsed: process=${tanProcess}, hasChallenge=${Boolean(challengeText)}`);
 
   if (tanProcess || challengeText) {
     return {
