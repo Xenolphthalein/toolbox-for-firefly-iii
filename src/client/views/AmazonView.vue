@@ -856,14 +856,14 @@ async function applySelected() {
 
 function getAmazonBreakdownItems(breakdown: AmazonConfidenceBreakdown): BreakdownItem[] {
   return [
-    { label: t('views.amazon.breakdown.orderIdMatch'), value: breakdown.orderIdMatch, max: 0.5 },
-    { label: t('common.labels.amountMatch'), value: breakdown.amountMatch, max: 0.2 },
-    { label: t('common.labels.exactAmountBonus'), value: breakdown.exactAmountBonus, max: 0.1 },
-    { label: t('common.labels.dateProximity'), value: breakdown.dateProximity, max: 0.1 },
+    { label: t('views.amazon.breakdown.orderIdMatch'), value: breakdown.orderIdMatch, max: 0.7 },
+    { label: t('common.labels.amountMatch'), value: breakdown.amountMatch, max: 0.25 },
+    { label: t('common.labels.exactAmountBonus'), value: breakdown.exactAmountBonus, max: 0.2 },
+    { label: t('common.labels.dateProximity'), value: breakdown.dateProximity, max: 0.2 },
     {
       label: t('views.amazon.breakdown.itemTitleMatch'),
       value: breakdown.itemTitleMatch,
-      max: 0.1,
+      max: 0.05,
     },
   ];
 }
