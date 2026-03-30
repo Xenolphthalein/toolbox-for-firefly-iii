@@ -151,15 +151,21 @@ watch(
 <style scoped>
 .preview-table-container {
   flex: 1;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   border: 1px solid rgba(var(--v-border-color), 0.2);
   border-radius: 8px;
   min-height: 100px;
+  scrollbar-gutter: stable both-edges;
 }
 
 .preview-table {
   width: max-content;
   min-width: 100%;
+}
+
+.preview-table :deep(.v-table__wrapper) {
+  overflow: visible;
 }
 
 .preview-table th {
@@ -195,5 +201,24 @@ watch(
 
 .preview-table-row--selected {
   background: rgba(var(--v-theme-primary), 0.12);
+}
+
+.preview-table-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.preview-table-container::-webkit-scrollbar-track {
+  background: rgba(var(--v-border-color), 0.08);
+  border-radius: 999px;
+}
+
+.preview-table-container::-webkit-scrollbar-thumb {
+  background: rgba(var(--v-border-color), 0.35);
+  border-radius: 999px;
+}
+
+.preview-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--v-border-color), 0.5);
 }
 </style>
