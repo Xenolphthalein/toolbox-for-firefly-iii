@@ -37,7 +37,7 @@ describe('FinTS log redaction toggle', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     logMessage(
-      'debug',
+      'info',
       'Transaction fetch response',
       "HNHBK:1:3+000000000123+300+1+1'HIKAZ:4:6:3+@18@DE89370400440532013000'"
     );

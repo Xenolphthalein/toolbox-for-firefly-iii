@@ -149,7 +149,7 @@ describe('FinTS utils', () => {
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       logMessage(
-        'debug',
+        'info',
         'Transaction fetch response',
         "HNHBK:1:3+000000000211+300+000006KPOBQOU685HAUH5PQ580PPPF+1+000006KPOBQOU685HAUH5PQ580PPPF:1'HIRMG:2:2:+9800::Der Dialog wurde abgebrochen.+9010::Ungültiger Signaturaufbau?: Fehler im Segmentaufbau.'HIKAZ:4:6:3+@18@DE89370400440532013000'HNHBS:3:1+1'"
       );
