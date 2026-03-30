@@ -840,6 +840,7 @@ import draggable from 'vuedraggable';
 import { WizardStepper, FileUploadCard, EmptyState } from '../components/common';
 import { SwimlaneCard } from '../components/converter';
 import { useConverter } from '../composables/useConverter';
+import { saveBlobWithDialog } from '../utils';
 import { FIREFLY_COLUMNS } from '@shared/types/converter';
 
 const { t } = useI18n();
@@ -1093,17 +1094,28 @@ function onReset() {
 }
 
 // Config save/load
-function onSaveConfig() {
+async function onSaveConfig() {
   const json = converter.saveConfig();
   const blob = new Blob([json], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${converter.config.value.name.toLowerCase().replace(/\s+/g, '-')}.json`;
-  link.click();
-  URL.revokeObjectURL(link.href);
 
-  successMessage.value = t('views.converter.configSaved');
-  showSuccess.value = true;
+  try {
+    const saved = await saveBlobWithDialog(blob, {
+      suggestedName: 'csv-importer-config.json',
+      description: 'JSON configuration',
+      mimeType: 'application/json',
+      extensions: ['.json'],
+    });
+
+    if (!saved) {
+      return;
+    }
+
+    successMessage.value = t('views.converter.configSaved');
+    showSuccess.value = true;
+  } catch (error) {
+    converter.error.value =
+      error instanceof Error ? error.message : t('views.converter.failedToSaveConfig');
+  }
 }
 
 function onLoadConfig() {

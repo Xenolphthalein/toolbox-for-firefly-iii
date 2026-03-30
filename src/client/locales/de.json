@@ -535,6 +535,7 @@
       "configLoaded": "Konfiguration geladen!",
       "configLoadedWithOptions": "Konfiguration geladen! CSV-Optionen und Zuordnungen angewendet.",
       "csvDownloaded": "CSV erfolgreich heruntergeladen!",
+      "failedToSaveConfig": "Fehler beim Speichern der Konfiguration",
       "failedToDownload": "Fehler beim Herunterladen der CSV",
       "successfullyImported": "{count} Transaktion(en) erfolgreich importiert!",
       "failedToImport": "Fehler beim Importieren von Transaktionen",
@@ -596,6 +597,7 @@
         "failedToFetch": "Fehler beim Abrufen von Transaktionen",
         "configLoaded": "Konfiguration erfolgreich geladen",
         "failedToLoadConfig": "Fehler beim Laden der Konfiguration",
+        "failedToSaveConfig": "FinTS-Konfiguration konnte nicht gespeichert werden",
         "configLoadedEnterPin": "Konfiguration geladen! Geben Sie Ihre PIN ein, um sich zu verbinden."
       }
     },
