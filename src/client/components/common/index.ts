@@ -12,6 +12,8 @@ import FileUploadCard from './FileUploadCard.vue';
 import ResultsSummaryCard from './ResultsSummaryCard.vue';
 import FinalActionButton from './FinalActionButton.vue';
 import ManualMatchBoard from './ManualMatchBoard.vue';
+import LazyPreviewTable from './LazyPreviewTable.vue';
+import PreviewRowSelectorDialog from './PreviewRowSelectorDialog.vue';
 
 export {
   DateRangeFilter,
@@ -28,4 +30,6 @@ export {
   ResultsSummaryCard,
   FinalActionButton,
   ManualMatchBoard,
+  LazyPreviewTable,
+  PreviewRowSelectorDialog,
 };

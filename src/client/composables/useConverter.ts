@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type {
@@ -54,6 +54,8 @@ export interface ConverterState {
   config: Ref<ConverterConfig>;
   /** Preview of transformed data */
   preview: Ref<TransformPreview | null>;
+  /** Selected source row index for swimlane previews */
+  previewRowIndex: Ref<number>;
   /** Whether the converter is currently processing */
   processing: Ref<boolean>;
   /** Current error message */
@@ -97,6 +99,8 @@ export interface ConverterActions {
   reorderSwimlanes: (swimlanes: SwimlaneConfig[]) => void;
   /** Generate preview of transformation */
   generatePreview: (maxRows?: number) => void;
+  /** Set the source row used for swimlane previews */
+  setPreviewRowIndex: (rowIndex: number) => void;
   /** Get all transformed data as array of objects */
   getTransformedData: () => TransformedTransaction[];
   /** Validate transformed data for Firefly import */
@@ -124,10 +128,18 @@ export function useConverter(): ConverterState & ConverterActions {
   const parsedCSV = ref<ParsedCSV | null>(null);
   const config = ref<ConverterConfig>(createDefaultConfig());
   const preview = ref<TransformPreview | null>(null);
+  const previewRowIndex = ref(0);
   const processing = ref(false);
   const error = ref<string | null>(null);
   const currentFile = ref<File | null>(null);
   const importProgress = ref<{ current: number; total: number } | null>(null);
+
+  watch(parsedCSV, (nextParsedCSV) => {
+    previewRowIndex.value = 0;
+    if (!nextParsedCSV) {
+      preview.value = null;
+    }
+  });
 
   /**
    * Parse a CSV file into rows and columns
@@ -181,6 +193,7 @@ export function useConverter(): ConverterState & ConverterActions {
         rows: dataRows,
         rawContent: text,
       };
+      previewRowIndex.value = 0;
 
       // Update config with detected settings
       config.value.csvOptions.delimiter = delimiter;
@@ -188,7 +201,7 @@ export function useConverter(): ConverterState & ConverterActions {
       config.value.csvOptions.skipRows = skipRows;
 
       // Auto-generate preview
-      generatePreview(5);
+      generatePreview();
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to parse CSV';
       parsedCSV.value = null;
@@ -249,7 +262,7 @@ export function useConverter(): ConverterState & ConverterActions {
     if (swimlane) {
       swimlane.blocks = blocks;
       config.value.updatedAt = new Date().toISOString();
-      generatePreview(5);
+      generatePreview();
     }
   }
 
@@ -261,7 +274,7 @@ export function useConverter(): ConverterState & ConverterActions {
     if (swimlane) {
       swimlane.enabled = enabled;
       config.value.updatedAt = new Date().toISOString();
-      generatePreview(5);
+      generatePreview();
     }
   }
 
@@ -286,7 +299,7 @@ export function useConverter(): ConverterState & ConverterActions {
     if (index !== -1) {
       config.value.swimlanes.splice(index, 1);
       config.value.updatedAt = new Date().toISOString();
-      generatePreview(5);
+      generatePreview();
     }
   }
 
@@ -609,7 +622,7 @@ export function useConverter(): ConverterState & ConverterActions {
   /**
    * Generate preview of the transformation
    */
-  function generatePreview(maxRows = 10): void {
+  function generatePreview(_maxRows = 10): void {
     if (!parsedCSV.value) {
       preview.value = null;
       return;
@@ -623,12 +636,12 @@ export function useConverter(): ConverterState & ConverterActions {
     const swimlanePreviewValues: Record<string, string> = {};
     let removedRows = 0;
 
-    const rowsToProcess = parsedCSV.value.rows.slice(0, maxRows);
+    const rowsToProcess = parsedCSV.value.rows;
 
     // Process first row to get preview values and errors for swimlanes
     if (rowsToProcess.length > 0) {
-      const firstRow = rowsToProcess[0];
-      const firstResult = transformRow(firstRow, parsedCSV.value.headers, enabledSwimlanes);
+      const selectedRow = rowsToProcess[Math.min(previewRowIndex.value, rowsToProcess.length - 1)];
+      const firstResult = transformRow(selectedRow, parsedCSV.value.headers, enabledSwimlanes);
 
       // Capture errors from first row for swimlane display
       Object.assign(swimlaneErrors, firstResult.errors);
@@ -668,6 +681,16 @@ export function useConverter(): ConverterState & ConverterActions {
       swimlanePreviewValues,
       removedRows,
     };
+  }
+
+  function setPreviewRowIndex(rowIndex: number): void {
+    if (!parsedCSV.value || parsedCSV.value.rows.length === 0) {
+      previewRowIndex.value = 0;
+      return;
+    }
+
+    previewRowIndex.value = Math.min(Math.max(rowIndex, 0), parsedCSV.value.rows.length - 1);
+    generatePreview();
   }
 
   /**
@@ -1123,7 +1146,7 @@ export function useConverter(): ConverterState & ConverterActions {
       }
       config.value = loaded;
       if (parsedCSV.value) {
-        generatePreview(5);
+        generatePreview();
       }
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load configuration';
@@ -1137,6 +1160,7 @@ export function useConverter(): ConverterState & ConverterActions {
     parsedCSV.value = null;
     config.value = createDefaultConfig();
     preview.value = null;
+    previewRowIndex.value = 0;
     error.value = null;
     currentFile.value = null;
     importProgress.value = null;
@@ -1147,6 +1171,7 @@ export function useConverter(): ConverterState & ConverterActions {
     parsedCSV,
     config,
     preview,
+    previewRowIndex,
     processing,
     error,
     currentFile,
@@ -1159,6 +1184,7 @@ export function useConverter(): ConverterState & ConverterActions {
     removeSwimlane,
     reorderSwimlanes,
     generatePreview,
+    setPreviewRowIndex,
     getTransformedData,
     validateForImport,
     importToFirefly,
