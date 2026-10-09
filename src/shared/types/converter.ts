@@ -1,4 +1,5 @@
 // Bank Export Converter Types
+import { generateId } from '../utils/id.js';
 
 /**
  * Firefly III import column types that can be mapped to
@@ -581,7 +582,7 @@ export const BLOCK_TYPES: BlockTypeInfo[] = [
  * Create a new block with default values
  */
 export function createBlock(type: TransformBlockType): TransformBlock {
-  const id = crypto.randomUUID();
+  const id = generateId();
 
   switch (type) {
     case 'column':
@@ -643,7 +644,7 @@ export function createBlock(type: TransformBlockType): TransformBlock {
  */
 export function createSwimlane(targetColumn: FireflyImportColumn): SwimlaneConfig {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     targetColumn,
     blocks: [createBlock('column')],
     enabled: true,

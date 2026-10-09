@@ -885,6 +885,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { generateId } from '@shared/utils/id';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import draggable from 'vuedraggable';
@@ -1643,7 +1644,7 @@ function setupDefaultSwimlanes() {
   const dateSwimlane = swimlanes.find((s) => s.targetColumn === 'date');
   if (dateSwimlane) {
     converter.updateSwimlaneBlocks(dateSwimlane.id, [
-      { id: crypto.randomUUID(), type: 'column', sourceColumn: 'bookingDate' },
+      { id: generateId(), type: 'column', sourceColumn: 'bookingDate' },
     ]);
   }
 
@@ -1651,9 +1652,9 @@ function setupDefaultSwimlanes() {
   const amountSwimlane = swimlanes.find((s) => s.targetColumn === 'amount');
   if (amountSwimlane) {
     converter.updateSwimlaneBlocks(amountSwimlane.id, [
-      { id: crypto.randomUUID(), type: 'column', sourceColumn: 'amount' },
+      { id: generateId(), type: 'column', sourceColumn: 'amount' },
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         type: 'numberFormat',
         inputDecimalSeparator: '.',
         inputThousandsSeparator: '',
@@ -1669,7 +1670,7 @@ function setupDefaultSwimlanes() {
   const descSwimlane = swimlanes.find((s) => s.targetColumn === 'description');
   if (descSwimlane) {
     converter.updateSwimlaneBlocks(descSwimlane.id, [
-      { id: crypto.randomUUID(), type: 'column', sourceColumn: 'purpose' },
+      { id: generateId(), type: 'column', sourceColumn: 'purpose' },
     ]);
   }
 
@@ -1678,7 +1679,7 @@ function setupDefaultSwimlanes() {
   if (typeSwimlane) {
     converter.updateSwimlaneBlocks(typeSwimlane.id, [
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         type: 'switchCase',
         useCurrentValue: false,
         column: 'amount',
@@ -1686,10 +1687,10 @@ function setupDefaultSwimlanes() {
           {
             operator: 'lessThan',
             value: '0',
-            blocks: [{ id: crypto.randomUUID(), type: 'static', value: 'withdrawal' }],
+            blocks: [{ id: generateId(), type: 'static', value: 'withdrawal' }],
           },
         ],
-        defaultBlocks: [{ id: crypto.randomUUID(), type: 'static', value: 'deposit' }],
+        defaultBlocks: [{ id: generateId(), type: 'static', value: 'deposit' }],
       },
     ]);
   }
@@ -1699,7 +1700,7 @@ function setupDefaultSwimlanes() {
   if (destSwimlane) {
     converter.updateSwimlaneBlocks(destSwimlane.id, [
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         type: 'switchCase',
         useCurrentValue: false,
         column: 'amount',
@@ -1707,10 +1708,10 @@ function setupDefaultSwimlanes() {
           {
             operator: 'lessThan',
             value: '0',
-            blocks: [{ id: crypto.randomUUID(), type: 'column', sourceColumn: 'counterpartyName' }],
+            blocks: [{ id: generateId(), type: 'column', sourceColumn: 'counterpartyName' }],
           },
         ],
-        defaultBlocks: [{ id: crypto.randomUUID(), type: 'static', value: '' }],
+        defaultBlocks: [{ id: generateId(), type: 'static', value: '' }],
       },
     ]);
   }
@@ -1720,7 +1721,7 @@ function setupDefaultSwimlanes() {
   if (sourceSwimlane) {
     converter.updateSwimlaneBlocks(sourceSwimlane.id, [
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         type: 'switchCase',
         useCurrentValue: false,
         column: 'amount',
@@ -1728,10 +1729,10 @@ function setupDefaultSwimlanes() {
           {
             operator: 'greaterThan',
             value: '0',
-            blocks: [{ id: crypto.randomUUID(), type: 'column', sourceColumn: 'counterpartyName' }],
+            blocks: [{ id: generateId(), type: 'column', sourceColumn: 'counterpartyName' }],
           },
         ],
-        defaultBlocks: [{ id: crypto.randomUUID(), type: 'static', value: '' }],
+        defaultBlocks: [{ id: generateId(), type: 'static', value: '' }],
       },
     ]);
   }

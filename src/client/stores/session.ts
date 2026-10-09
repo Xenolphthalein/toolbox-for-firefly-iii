@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { generateId } from '@shared/utils/id';
 import { ref } from 'vue';
 
 /**
@@ -11,7 +12,7 @@ import { ref } from 'vue';
  */
 export const useSessionStore = defineStore('session', () => {
   // State - session ID (no longer sent to backend)
-  const sessionId = ref(crypto.randomUUID());
+  const sessionId = ref(generateId());
 
   // Actions
   /**
@@ -19,7 +20,7 @@ export const useSessionStore = defineStore('session', () => {
    * @deprecated No longer affects backend state
    */
   function regenerateSessionId(): string {
-    sessionId.value = crypto.randomUUID();
+    sessionId.value = generateId();
     return sessionId.value;
   }
 
